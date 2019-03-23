@@ -1,0 +1,115 @@
+area,canonical,alternate,default,Lookup
+act,STOC,STOC,TRUE,#N/A
+act,FOCS,FOCS,TRUE,#N/A
+act,SODA,SODA,TRUE,#N/A
+ai,AAAI,AAAI,TRUE,AAAI
+ai,AAAI,AAAI/IAAI,TRUE,AAAI
+ai,IJCAI,IJCAI,TRUE,IJCAI
+arch,ISCA,ISCA,TRUE,#N/A
+arch,MICRO,MICRO,TRUE,#N/A
+arch,ASPLOS,ASPLOS,TRUE,#N/A
+bed,RTSS,RTSS,TRUE,#N/A
+bed,RTAS,RTAS,TRUE,#N/A
+bed,RTAS,IEEE Real-Time and Embedded Technology and Applications Symposium,TRUE,#N/A
+bed,EMSOFT,EMSOFT,TRUE,#N/A
+bio,RECOMB,RECOMB,TRUE,#N/A
+bio,ISMB,ISMB,TRUE,#N/A
+bio,Bioinformatics,Bioinformatics,TRUE,#N/A
+bio,ISMB,ISMB/ECCB (Supplement of Bioinformatics),TRUE,#N/A
+bio,ISMB,Bioinformatics [ISMB/ECCB],TRUE,#N/A
+bio,ISMB,ISMB (Supplement of Bioinformatics),TRUE,#N/A
+chi,CHI,CHI,TRUE,#N/A
+chi,UbiComp,UbiComp,TRUE,#N/A
+chi,UbiComp,Ubicomp,TRUE,#N/A
+chi,Pervasive,Pervasive Computing,TRUE,#N/A
+chi,IMWUT,"Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies",TRUE,#N/A
+chi,UIST,UIST,TRUE,#N/A
+comm,SIGCOMM,SIGCOMM,TRUE,#N/A
+comm,INFOCOM,INFOCOM,TRUE,#N/A
+comm,NSDI,NSDI,TRUE,#N/A
+crypt,CRYPTO,CRYPTO,TRUE,#N/A
+crypt,CRYPTO,CRYPTO (1),TRUE,#N/A
+crypt,CRYPTO,CRYPTO (2),TRUE,#N/A
+crypt,CRYPTO,CRYPTO (3),TRUE,#N/A
+crypt,EUROCRYPT,EUROCRYPT,TRUE,#N/A
+crypt,EUROCRYPT,EUROCRYPT (1),TRUE,#N/A
+crypt,EUROCRYPT,EUROCRYPT (2),TRUE,#N/A
+crypt,EUROCRYPT,EUROCRYPT (3),TRUE,#N/A
+da,ICCAD,ICCAD,TRUE,#N/A
+da,DAC,DAC,TRUE,#N/A
+graph,ACM Trans. Graph.,ACM Trans. Graph.,TRUE,#N/A
+graph,SIGGRAPH,SIGGRAPH,TRUE,#N/A
+hpc,SC,SC,TRUE,#N/A
+hpc,HPDC,HPDC,TRUE,#N/A
+hpc,ICS,ICS,TRUE,#N/A
+ir,WWW,WWW,TRUE,#N/A
+ir,SIGIR,SIGIR,TRUE,#N/A
+log,CAV,CAV,TRUE,#N/A
+log,CAV,CAV (1),TRUE,#N/A
+log,CAV,CAV (2),TRUE,#N/A
+log,LICS,LICS,TRUE,#N/A
+log,LICS,CSL-LICS,TRUE,#N/A
+metrics,SIGMETRICS,SIGMETRICS,TRUE,#N/A
+metrics,SIGMETRICS,SIGMETRICS/Performance,TRUE,#N/A
+metrics,IMC,IMC,TRUE,#N/A
+metrics,IMC,Internet Measurement Conference,TRUE,#N/A
+mlmining,NIPS,NIPS,TRUE,#N/A
+mlmining,ICML,ICML,TRUE,ICML
+mlmining,ICML,ICML (1),TRUE,ICML
+mlmining,ICML,ICML (2),TRUE,ICML
+mlmining,ICML,ICML (3),TRUE,ICML
+mlmining,KDD,KDD,TRUE,#N/A
+mobile,MobiSys,MobiSys,TRUE,#N/A
+mobile,MobiCom,MobiCom,TRUE,#N/A
+mobile,MobiCom,MOBICOM,TRUE,#N/A
+mobile,SenSys,SenSys,TRUE,#N/A
+mod,VLDB,VLDB,TRUE,#N/A
+mod,VLDB,PVLDB,TRUE,#N/A
+mod,SIGMOD Conference,SIGMOD Conference,TRUE,#N/A
+nlp,EMNLP,EMNLP,TRUE,#N/A
+nlp,ACL,ACL,TRUE,#N/A
+nlp,ACL,ACL (1),TRUE,#N/A
+nlp,ACL,ACL (2),TRUE,#N/A
+nlp,ACL,ACL (4),TRUE,#N/A
+nlp,NAACL,NAACL,TRUE,#N/A
+nlp,NAACL,HLT-NAACL,TRUE,#N/A
+nlp,NAACL,NAACL-HLT,TRUE,#N/A
+nlp,ACL,ACL/IJCNLP,TRUE,#N/A
+nlp,ACL,COLING-ACL,TRUE,#N/A
+nlp,EMNLP,EMNLP-CoNLL,TRUE,#N/A
+nlp,EMNLP,HLT/EMNLP,TRUE,#N/A
+ops,SOSP,SOSP,TRUE,#N/A
+ops,OSDI,OSDI,TRUE,#N/A
+ops,EuroSys,EuroSys,TRUE,#N/A
+ops,USENIX Annual Technical Conference,USENIX Annual Technical Conference,TRUE,#N/A
+ops,USENIX Annual Technical Conference,"USENIX Annual Technical Conference, General Track",TRUE,#N/A
+plan,POPL,POPL,TRUE,#N/A
+plan,PLDI,PLDI,TRUE,#N/A
+robotics,ICRA,ICRA,TRUE,ICRA
+robotics,ICRA,ICRA (1),TRUE,ICRA
+robotics,ICRA,ICRA (2),TRUE,ICRA
+robotics,IROS,IROS,TRUE,IROS
+robotics,Robotics: Science and Systems,Robotics: Science and Systems,TRUE,#N/A
+sec,IEEE Symposium on Security and Privacy,IEEE Symposium on Security and Privacy,TRUE,#N/A
+sec,ACM Conference on Computer and Communications Security,ACM Conference on Computer and Communications Security,TRUE,#N/A
+sec,USENIX Security,USENIX Security Symposium,TRUE,#N/A
+sec,USENIX Security,USENIX Security,TRUE,#N/A
+soft,ICSE,ICSE,TRUE,#N/A
+soft,ICSE,ICSE (1),TRUE,#N/A
+soft,ICSE,ICSE (2),TRUE,#N/A
+soft,SIGSOFT FSE,SIGSOFT FSE,TRUE,#N/A
+soft,SIGSOFT FSE,ESEC/SIGSOFT FSE,TRUE,#N/A
+vis,IEEE Visualization,IEEE Visualization,TRUE,#N/A
+vis,VR,VR,TRUE,#N/A
+vis,IEEE Trans. Vis. Comput. Graph.,IEEE Trans. Vis. Comput. Graph.,TRUE,#N/A
+vision,CVPR,CVPR,TRUE,CVPR
+vision,CVPR,CVPR (1),TRUE,CVPR
+vision,CVPR,CVPR (2),TRUE,CVPR
+vision,ICCV,ICCV,TRUE,#N/A
+vision,ECCV,ECCV (1),TRUE,#N/A
+vision,ECCV,ECCV (2),TRUE,#N/A
+vision,ECCV,ECCV (3),TRUE,#N/A
+vision,ECCV,ECCV (4),TRUE,#N/A
+vision,ECCV,ECCV (5),TRUE,#N/A
+vision,ECCV,ECCV (6),TRUE,#N/A
+vision,ECCV,ECCV (7),TRUE,#N/A
