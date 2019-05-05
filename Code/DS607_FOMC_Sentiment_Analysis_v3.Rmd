@@ -1,0 +1,108 @@
+---
+title: "DS607_FOMC_Sentiment_Analysis"
+author: "Jagdish Chhabria"
+date: "April 29, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r download statements}
+library(pdftools)
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(tidyr)
+library(xlsx)
+library(RCurl)
+library(XML)
+
+```
+
+
+```{r}
+
+links<-c("https://www.federalreserve.gov/newsevents/pressreleases/monetary20190130a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20190320a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20190501a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180131a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180321a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180502a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180613a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180801a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180926a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20181108a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20181219a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170201a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170315a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170503a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170614a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170726a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170920a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20171101a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20171213a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160127a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160316a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160427a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160615a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160727a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160921a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20161102a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20161214a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150128a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150318a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150429a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150617a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150729a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150917a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20151028a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20151216a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140129a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140319a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140430a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140618a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140730a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140917a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20141029a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20141217a.htm"
+         
+)
+
+length(links)
+
+
+
+```
+
+```{r}
+statement.dates<-NULL
+for(i in seq(from=1, to=length(links))) {
+  statement.dates[i]<-(str_extract(links[i],"[[:digit:]]+"))
+  }
+
+#reports<-cbind(statement.dates, links)
+reports<-data.frame(statement.dates, links)
+print(reports)
+
+```
+
+
+```{r}
+
+statement.content<-NULL
+for(i in seq(from=1, to=length(reports$links))) {
+stm.url<-getURL(reports$links[i])
+stm.tree<-htmlTreeParse(stm.url,useInternal=TRUE )
+stm.tree.parse<-unlist(xpathApply(stm.tree, path="//p", fun=xmlValue))
+n<-(which(!is.na(str_locate(stm.tree.parse, "release")))+1)[1]
+l<-length(stm.tree.parse)
+reports$statement.content[i]<-paste(stm.tree.parse[n:l], collapse = "")
+reports$statement.content[i]<-gsub("\n","",reports$statement.content[i])
+}
+
+
+```
+
