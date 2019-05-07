@@ -1,0 +1,111 @@
+---
+title: "DS607_Validate_FOMC_DATA"
+author: "Alexander Ng"
+date: "5/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(kableExtra)
+library(knitr)
+```
+
+## Overview
+
+This markdown reviews the validity of the FOMC data frame created by Jagdish.
+We assume the fomc_data.rds file is located in the working directory.
+
+```{r}
+d2<-readRDS(file = "fomc_data.rds")
+```
+
+The FOMC dates are out of order and should be arrange alphabetically.
+Words counts should be tabulated using *str_count*
+
+```{r}
+
+d2 %>% 
+  mutate_if( is.factor, as.character) %>%
+  arrange(statement.dates) %>%
+  mutate( numwords = str_count(statement.content, "\\S+")) %>%
+  select( statement.dates, numwords ) %>%
+  filter(numwords > 700 ) %>% arrange(numwords)
+
+```
+
+## Revised DataFrame
+
+```{r}
+
+d2 %>% mutate_if( is.factor, as.character) %>%  # needed to change dates from factors to string
+    arrange(statement.dates) %>% 
+    mutate( numwords = str_count(statement.content, "\\S+")) -> d3
+
+d3 %>% select( statement.dates, numwords) %>% 
+    kable() %>% 
+    kable_styling() %>% 
+    scroll_box(width="85%", height="200px")
+
+dim(d3)
+
+```
+
+We need to make 4 changes to the dataframe rows.
+
+Remove 3 dates corresponding to extraordinary FOMC meeting related to swap lines, TALF and other measures.  These dates do not have normal rate setting objectives.
+The dates to remove from the dataframe are:
+
+20070810,  20080311 and 20100509.
+
+Lastly, one of the dates is misnamed in the html filelink as 20070618 but the actual statement was released on 20070628.   This is a typo in the URL.   The actual statement contains the date June 28, 2007 which confirms the URL is misnamed.
+
+```{r}
+d3 %>% 
+  filter( statement.dates != "20070810") %>%
+  filter( statement.dates != "20080311") %>%
+  filter( statement.dates != "20100509")  -> d4
+
+
+d4[d4$statement.dates == "20070618", "statement.dates"] <- "20070628"
+
+d4 %>% select(statement.dates, numwords) %>%
+  kable() %>%
+  kable_styling() %>%
+  scroll_box(width="100%", height="250px")
+
+dim(d4)
+
+```
+
+## Manual Validation of statements
+
+I checked the 4 statements against the actual webpage.  
+
+Oct 10, 2008
+Dec 16, 2009
+Sep 17, 2014 is the longest and is accurate.
+May  1, 2019 is the most recent
+
+They are all accurate **except for one detail**.
+The elimination of newline characters is causing consecutive words to be conjoined producing nonsense words.
+The line code below should be eliminated in DS607_FOMC_Sentiment_Analysis_v3.Rmd
+
+#reports$statement.content[i]<-gsub("\n","",reports$statement.content[i])
+
+
+## Conclusion
+
+Once the removal of the minor changes to gsub command is made, the dataframe d4 above should be fit for purpose to use for research.
+
+Nonetheless, I export the dataframe as a binary object below.
+
+```{r}
+saveRDS(d4, file = "fomc_corrected_data_v1.rds")
+
+```
