@@ -187,6 +187,6 @@ d2<-readRDS(file = "fomc_data.rds")
 
 
 ```{r}
-print(reports$statement.content[98])
+print(d2$statement.content[98])
 ```
 

@@ -1,0 +1,332 @@
+---
+title: "Sentiment Analysis on Federal Open Market Committee (FOMC) statements"
+author: "Henry Otuadinma"
+date: "May 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(extrafont)
+library(ggraph)
+library(ggridges)
+library(pdftools)
+library(tidyverse)
+library(tidytext)
+library(forcats)
+library(reshape2)
+library(tidyr)
+library(igraph)
+library(widyr)
+library(viridis)
+library(textrank)
+library(lattice)
+library(igraph)
+library(ggraph)
+library(RColorBrewer)
+library(wordcloud)
+library(tm)
+library(SentimentAnalysis)
+```
+
+##### Read Data
+
+```{r}
+
+fomcStatements <-readRDS(file = "fomc_corrected_data_v1.rds") %>% select(statement.dates, statement.content)
+
+```
+ 
+ 
+##### Exploratory Analysis
+
+
+```{r}
+
+fomcS <- fomcStatements %>%  mutate(date = statement.dates, year = as.numeric(str_extract(statement.dates, '\\d{4}')), text= statement.content) %>%
+  unnest(text) %>% unnest_tokens(word, text) %>% anti_join(stop_words)%>%
+  count(date, year, word, sort = TRUE)%>% mutate(frequency = n)  %>% select(date, year, word, frequency)
+  
+```
+
+```{r}
+
+head(fomcS)
+
+```
+
+##### tf-idf
+
+```{r}
+
+fomc_x <- fomcS %>%
+  bind_tf_idf(word, year, frequency) %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(year) %>%
+  mutate(id=row_number()) %>%
+  ungroup()
+
+```
+
+
+```{r}
+
+head(fomc_x)
+
+```
+
+
+```{r}
+
+tail(fomc_x)
+
+```
+
+
+#### What are they talking about?
+
+```{r}
+fed_text <- 
+  fomcStatements %>%  mutate(date = statement.dates, year = as.numeric(str_extract(statement.dates, '\\d{4}')), text= statement.content) %>%
+  unnest(text) %>%
+  unnest_tokens(word,text)%>%mutate(word = stripWhitespace(gsub("[^A-Za-z ]"," ",word))) %>% 
+  filter(word != "") %>% filter(word != " ") %>%
+  anti_join(stop_words) %>% select(date, year, word)
+
+```
+
+```{r}
+
+f_text <- fed_text %>% group_by(year) %>% count(word,sort=TRUE) %>% mutate(rank=row_number()) %>%
+  ungroup() %>% arrange(rank,year)
+
+```
+
+
+```{r}
+
+head(f_text)
+
+```
+
+
+```{r message=FALSE, fig.width = 10, fig.asp = .80}
+
+ gg <- f_text %>% filter(rank<11)%>%
+  ggplot(aes(y=n,x=fct_reorder(word,n))) +
+  geom_col(fill="#27408b")+
+  facet_wrap(~year,scales="free", ncol=4)+
+  coord_flip()+
+  theme_ridges(font_size=11)+
+  labs(x="",y="",
+       title="Most Frequent Words in FOMC Statements grouped by years (2007 - 2019")
+
+gg
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+
+wordcloud(words = f_text$word, freq = f_text$n, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+
+```
+
+#### Recession period (2008)
+
+```{r}
+
+fed_textb <- 
+  fed_text %>%
+  count(date, year,word,sort=TRUE) %>%
+  bind_tf_idf(word, date, n) %>%
+  arrange(desc(tf_idf))
+
+```
+
+
+```{r}
+fT <- fed_textb %>% 
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(date) %>%
+  mutate(id=row_number()) %>%
+  ungroup() %>% arrange(desc(n)) %>% filter(id<100)
+```
+
+
+```{r fig.width = 12, fig.asp = .80}
+
+dt <- subset(fT, year == 2008)%>% filter(id < 100)
+
+ggplot(head(dt, 180), aes(word, tf_idf, fill = date)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~date,scales="free", ncol=4)+
+  coord_flip()+
+  theme_ridges(font_size=10)+
+  theme(axis.text.x=element_blank())+
+  labs(x="",y ="tf-idf",
+       title="Highest words in FOMC Statements during recession (2008)")
+
+```
+
+
+#### Sentiment classification using the `bing` lexicon library
+
+```{r}
+
+fed_sentiment <-
+  fed_text %>%
+  inner_join(get_sentiments("bing")) %>%
+  mutate(index=row_number()) %>%
+  count(index, year, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+```
+
+
+```{r}
+head(fed_text)
+
+```
+
+
+```{r message=FALSE}
+
+ff <- fed_text %>%
+  inner_join(get_sentiments("bing")) %>%
+  mutate(linenumber=row_number()) %>%
+  count(date, year, index = linenumber %/% 10, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+  
+```
+
+
+```{r}
+
+head(ff)
+
+```
+
+```{r message=FALSE, fig.width = 12, fig.asp = .80}
+ ggplot(ff, aes(index, sentiment, fill = sentiment>0)) +
+ 
+   geom_col() +
+ 
+  facet_wrap(~year,scales = "free", ncol = 4)
+
+```
+
+
+#### Sentiment Analysis
+
+```{r}
+
+fomcX <- fomcStatements %>%  mutate(date = statement.dates, year = as.numeric(str_extract(statement.dates, '\\d{4}')), text= statement.content)%>% select(date, year, text)
+
+```
+
+##### Unoptimised
+
+```{r}
+
+sentiment1 <- analyzeSentiment(fomcX$text, language = "english", aggregate = fomcX$year, removeStopwords = TRUE, stemming = TRUE)
+
+```
+
+
+```{r}
+
+head(sentiment1)
+
+```
+
+#### Generate analysis based on the Loughran-McDonald's Financial dictionary
+
+##### Optimised - runs faster
+
+```{r}
+
+sentiment <- analyzeSentiment(fomcX$text, language = "english", aggregate = fomcX$year, removeStopwords = TRUE, stemming = TRUE, rules=list("SentimentLM"=list(ruleSentiment, loadDictionaryLM())))
+
+```
+
+
+```{r}
+
+head(sentiment)
+
+```
+
+
+```{r}
+
+summary(sentiment$SentimentLM)
+
+```
+
+##### Count positive and negative words
+
+```{r}
+
+table(convertToBinaryResponse(sentiment$SentimentLM))
+```
+
+#### Quick plot on the results
+
+```{r}
+sentimentData <- sentiment$SentimentLM   
+plotSentiment(sentimentData)
+
+```
+
+
+```{r}
+hist(sentiment$SentimentLM, probability=TRUE,
+     main="Density of Distribution for Standardized Sentiment Variable")
+lines(density(sentiment$SentimentLM))
+
+```
+
+#### Compute cross-correlation with other dictionaries
+
+```{r}
+ 
+cor(sentiment1[, c("SentimentLM", "SentimentHE", "SentimentQDAP")])
+
+```
+
+
+```{r}
+
+plotSentiment(sentiment$SentimentLM, x=fomcX$year, cumsum=TRUE, xlab = "year")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
