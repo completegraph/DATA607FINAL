@@ -99,7 +99,7 @@ fed_text <-
 
 ```{r}
 
-f_text <- fed_text %>% group_by(year) %>% count(word,sort=TRUE) %>% mutate(rank=row_number()) %>%
+f_text <- fed_text %>% group_by(year) %>% count(unique(word),sort=TRUE) %>% mutate(rank=row_number()) %>%
   ungroup() %>% arrange(rank,year)
 
 ```
