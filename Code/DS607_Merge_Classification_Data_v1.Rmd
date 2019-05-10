@@ -1,0 +1,95 @@
+---
+title: "DS607_Merge_Classification_Data_v1"
+author: "Alexander Ng"
+date: "5/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(lubridate)
+library(kableExtra)
+library(knitr)
+```
+
+## Overview
+
+This markdown merges the corrected (of 102 x 3 data frame of FOMC statements) with the classification data.
+We assume the fomc_corrected_data_v1.rds and the raw classification file is located in the working directory.
+
+
+
+```{r}
+d4<-readRDS(file = "fomc_corrected_data_v1.rds")
+dim(d4)
+str(d4)
+```
+
+## Raw Classification File
+
+We explicitly override the Date column to be imported as string because we will join these two dataframes on this data.
+
+```{r}
+classificationFile = "Classification_FOMC_Statements.csv"
+
+cls = read_csv(classificationFile , col_types = cols( Date = col_character() ) )
+
+cls %>% rename( Economic.Growth = "Economic Growth", Employment.Growth = "Employment Growth", Medium.Term.Rate = "Medium Term Rate", Policy.Rate = "Policy Rate") -> cls
+
+str(cls)
+
+```
+
+## Merging FOMC data and Classification Data
+
+```{r}
+
+d4 %>% inner_join( cls , by = c("statement.dates" = "Date")) %>%
+  mutate( date_mdy = mdy(Date2)) %>%
+  select(Index, 
+         statement.dates, 
+         links, 
+         statement.content, 
+         numwords,
+         date_mdy,
+         Economic.Growth,
+         Employment.Growth,
+         Inflation,
+         Medium.Term.Rate,
+         Policy.Rate ) -> mgData
+
+
+str(mgData)
+```
+
+Let us view the sample data from the statements
+
+```{r}
+mgData %>% select( Index, date_mdy, Economic.Growth, Employment.Growth, Inflation, Medium.Term.Rate, Policy.Rate) %>% kable() %>% kable_styling(bootstrap_options = c("hover", "striped")) %>%
+scroll_box(width = "90%", height = "300px")
+
+```
+
+## Exporting the Merged Data Frame
+
+We export the merged dataframe as a single RDS object for research use.
+
+```{r}
+rds_filename = "fomc_merged_data_v1.rds"
+
+saveRDS(mgData, file = rds_filename)
+```
+
+Let us also validate its contents.
+
+```{r}
+
+mgData_validated = readRDS(rds_filename)
+
+str(mgData_validated)
+```
