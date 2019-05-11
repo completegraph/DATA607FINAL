@@ -28,7 +28,7 @@ library(LiblineaR)
 
 ```{r}
 
-fomc_data <-readRDS(file = "fomc_merged_data_v1.rds")
+fomc_data <-readRDS(file = "fomc_merged_data_v2.rds")
 
 ```
 
@@ -86,6 +86,7 @@ mRateTest_dat <- mdtRate[mRateTestObs,]
 ```
 
 
+
 ```{r}
 train_corpus <- VCorpus(VectorSource(mRateTrain_dat$Medium.Term.Rate))
 ##Removing Punctuation
@@ -107,7 +108,7 @@ dtm_train_matrix <- as.matrix(train_corpus)
 dtm_train_matrix <- cbind(dtm_train_matrix, mRateTrain_dat$Medium.Term.Rate)
 colnames(dtm_train_matrix)[ncol(dtm_train_matrix)] <- "tone"
 training_set <- as.data.frame(dtm_train_matrix)
-training_set$tone <- as.factor(training_set$tone)
+#training_set$tone <- as.factor(tolower(training_set$tone))
 
 ```
 
@@ -143,110 +144,17 @@ dtm_test_matrix <- as.matrix(test_corpus)
 
 
 ```{r}
+cat(str(training_set$tone))
+
+```
+
+```{r}
 
 mrate_model_result <- predict(mdtRate_model, newdata = dtm_test_matrix)
 
 ```
 
-##### Form DTM
 
-```{r}
-mdtRate_corpus <- VCorpus(VectorSource(mdtRate$statement.content))
-##Removing Punctuation
-mdtRate_corpus <- tm_map(mdtRate_corpus, content_transformer(removePunctuation))
-##Removing numbers
-mdtRate_corpus <- tm_map(mdtRate_corpus, removeNumbers)
-##Converting to lower case
-mdtRate_corpus <- tm_map(mdtRate_corpus, content_transformer(tolower))
-##Removing stop words
-mdtRate_corpus <- tm_map(mdtRate_corpus, content_transformer(removeWords), stopwords("english"))
-##Stemming
-mdtRate_corpus <- tm_map(mdtRate_corpus, stemDocument)
-##Whitespace
-mdtRate_corpus <- tm_map(mdtRate_corpus, stripWhitespace)
-# Create Document Term Matrix
-mdtRate_dtm <- DocumentTermMatrix(mdtRate_corpus)
-mdtRate_corpus <- removeSparseTerms(mdtRate_dtm, 0.85)
-
-```
-
-
-```{r}
-
-mdtRate_dtm_train <- mdtRate_corpus[1:82, ]
-mdtRate_dtm_test <- mdtRate_corpus[83:102, ]
-
-```
-
-
-```{r}
-
-mdtRate_train_matrix <- as.matrix(mdtRate_dtm_train)
-mdtRate_train_matrix <- cbind(mdtRate_train_matrix, mdtRate[1:82, ]$Medium.Term.Rate)
-colnames(mdtRate_train_matrix)[ncol(mdtRate_train_matrix)] <- "tone"
-mdRate_trainingset <- as.data.frame(mdtRate_train_matrix)
-mdRate_trainingset$tone <- as.factor(mdRate_trainingset$tone)
-
-```
-
-
-```{r}
-
-mdtRate_test_matrix <- as.matrix(mdtRate_dtm_test)
-mdtRate_test_matrix <- as.matrix(mdtRate_test_matrix)
-mdtRate_train_matrix <- cbind(mdtRate_test_matrix, mdtRate[83:102, ]$Medium.Term.Rate)
-colnames(mdtRate_test_matrix)[ncol(mdtRate_test_matrix)] <- "tone"
-mdRate_testSet <- as.data.frame(mdtRate_test_matrix)
-
-```
-
-
-##### Remove factors whose levels are less than 2
-
-```{r}
-
-mdRate_trainFac <- mdRate_trainingset[, sapply(mdRate_trainingset, nlevels) > 1]
-
-```
-
-
-```{r}
-mdRate_testFac <- mdRate_testSet[, sapply(mdRate_testSet, nlevels) > 1]
-```
-
-
-```{r}
-
-mdRate_model <- train(tone ~., data = mdRate_fac, method = 'svmLinear3')
-
-```
-
-
-```{r}
-#Build the prediction 
-mdRateModel_result <- predict(mdRate_model, newdata = mdRate_testSet)
-
-```
-
-
-```{r}
-
-check_accuracy <- as.data.frame(cbind(prediction = model_ted_talk_result, rating = test_dat$highest_rating))
-
-check_accuracy <- check_accuracy %>% mutate(prediction = as.integer(prediction) - 1)
-check_accuracy$accuracy <- if_else(check_accuracy$prediction == check_accuracy$rating, 1, 0)
-round(prop.table(table(check_accuracy$accuracy)), 3)
-
-classificationMetrics(as.integer(test_dat$highest_rating), model_ted_talk_result)
-most_common_misclassified_ratings = check_accuracy %>% filter(check_accuracy$accuracy == 0) %>%
- group_by(rating) %>%
- summarise(Count = n()) %>%
- arrange(desc(Count)) %>%
- head(3)
-##Most commong missclassified rating
-levels(train_dat$highest_rating)[most_common_misclassified_ratings$rating]
-
-```
 
 
 
