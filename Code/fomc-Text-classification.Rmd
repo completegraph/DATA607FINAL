@@ -1,0 +1,268 @@
+---
+title: "Text classification on the FOMC Statements"
+author: "Henry Otuadinma"
+date: "May 10, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+library(dplyr)
+library(tidytext)
+library(tm)
+library(e1071)
+library(R.utils)
+library(DT)
+library(e1071)
+library(stringr)
+library(lattice)
+library(kernlab)
+library(mlbench)
+library(caretEnsemble)
+#library(klaR)
+library(nnet)
+library(LiblineaR)
+```
+
+
+```{r}
+
+fomc_data <-readRDS(file = "fomc_merged_data_v1.rds")
+
+```
+
+
+#### First, randomising the rows so that the statements from different eras of the economic movements can be well represented
+
+```{r}
+
+set.seed(1234567)
+
+fomc_Rand <- fomc_data[sample(nrow(fomc_data)),]
+
+```
+
+
+```{r}
+
+head(select(fomc_Rand, Index, statement.dates, date_mdy))
+```
+
+
+##### convert the statements' textual contents to lower and remove `the federal open market committee` as it is present in all the statements
+
+```{r}
+
+customStopWords <- c("the federal open market committee", "committee")
+
+```
+
+
+```{r}
+fomc_dataX <- fomc_Rand %>% mutate(statement.content = tolower(statement.content))
+
+fomc_dataX$statement.content <- str_replace_all(fomc_dataX$statement.content, customStopWords, "")
+
+```
+
+
+#### Classification targetting the `Medium.Term.Rate` variable
+
+```{r}
+
+mdtRate <- fomc_dataX %>% select(Index, statement.content, statement.dates, date_mdy, Medium.Term.Rate)
+
+```
+
+
+```{r}
+
+mRateTrainObs <- sample(nrow(mdtRate), .80 * nrow(mdtRate), replace = FALSE)
+mRateTestObs <- sample(nrow(mdtRate), .20 * nrow(mdtRate), replace = FALSE)
+mRateTrain_dat <- mdtRate[mRateTrainObs,]
+mRateTest_dat <- mdtRate[mRateTestObs,]
+
+```
+
+
+```{r}
+train_corpus <- VCorpus(VectorSource(mRateTrain_dat$Medium.Term.Rate))
+##Removing Punctuation
+train_corpus <- tm_map(train_corpus, content_transformer(removePunctuation))
+##Removing numbers
+train_corpus <- tm_map(train_corpus, removeNumbers)
+##Converting to lower case
+train_corpus <- tm_map(train_corpus, content_transformer(tolower))
+##Removing stop words
+train_corpus <- tm_map(train_corpus, content_transformer(removeWords), stopwords("english"))
+##Stemming
+train_corpus <- tm_map(train_corpus, stemDocument)
+##Whitespace
+train_corpus <- tm_map(train_corpus, stripWhitespace)
+# Create Document Term Matrix
+dtm_train <- DocumentTermMatrix(train_corpus)
+train_corpus <- removeSparseTerms(dtm_train, 0.85)
+dtm_train_matrix <- as.matrix(train_corpus)
+dtm_train_matrix <- cbind(dtm_train_matrix, mRateTrain_dat$Medium.Term.Rate)
+colnames(dtm_train_matrix)[ncol(dtm_train_matrix)] <- "tone"
+training_set <- as.data.frame(dtm_train_matrix)
+training_set$tone <- as.factor(training_set$tone)
+
+```
+
+
+```{r}
+
+mdtRate_model <- train(tone ~., data = training_set, method = 'svmLinear3')
+
+```
+
+
+```{r}
+#Preparing our test data. It's the same repetitive procedure.
+test_corpus <- VCorpus(VectorSource(mRateTest_dat$Medium.Term.Rate))
+##Removing Punctuation
+test_corpus <- tm_map(test_corpus, content_transformer(removePunctuation))
+##Removing numbers
+test_corpus <- tm_map(test_corpus, removeNumbers)
+##Converting to lower case
+test_corpus <- tm_map(test_corpus, content_transformer(tolower))
+##Removing stop words
+test_corpus <- tm_map(test_corpus, content_transformer(removeWords), stopwords("english"))
+##Stemming
+test_corpus <- tm_map(test_corpus, stemDocument)
+##Whitespace
+test_corpus <- tm_map(test_corpus, stripWhitespace)
+# Create Document Term Matrix
+dtm_test <- DocumentTermMatrix(test_corpus)
+test_corpus <- removeSparseTerms(dtm_test, 0.85)
+dtm_test_matrix <- as.matrix(test_corpus)
+
+```
+
+
+```{r}
+
+mrate_model_result <- predict(mdtRate_model, newdata = dtm_test_matrix)
+
+```
+
+##### Form DTM
+
+```{r}
+mdtRate_corpus <- VCorpus(VectorSource(mdtRate$statement.content))
+##Removing Punctuation
+mdtRate_corpus <- tm_map(mdtRate_corpus, content_transformer(removePunctuation))
+##Removing numbers
+mdtRate_corpus <- tm_map(mdtRate_corpus, removeNumbers)
+##Converting to lower case
+mdtRate_corpus <- tm_map(mdtRate_corpus, content_transformer(tolower))
+##Removing stop words
+mdtRate_corpus <- tm_map(mdtRate_corpus, content_transformer(removeWords), stopwords("english"))
+##Stemming
+mdtRate_corpus <- tm_map(mdtRate_corpus, stemDocument)
+##Whitespace
+mdtRate_corpus <- tm_map(mdtRate_corpus, stripWhitespace)
+# Create Document Term Matrix
+mdtRate_dtm <- DocumentTermMatrix(mdtRate_corpus)
+mdtRate_corpus <- removeSparseTerms(mdtRate_dtm, 0.85)
+
+```
+
+
+```{r}
+
+mdtRate_dtm_train <- mdtRate_corpus[1:82, ]
+mdtRate_dtm_test <- mdtRate_corpus[83:102, ]
+
+```
+
+
+```{r}
+
+mdtRate_train_matrix <- as.matrix(mdtRate_dtm_train)
+mdtRate_train_matrix <- cbind(mdtRate_train_matrix, mdtRate[1:82, ]$Medium.Term.Rate)
+colnames(mdtRate_train_matrix)[ncol(mdtRate_train_matrix)] <- "tone"
+mdRate_trainingset <- as.data.frame(mdtRate_train_matrix)
+mdRate_trainingset$tone <- as.factor(mdRate_trainingset$tone)
+
+```
+
+
+```{r}
+
+mdtRate_test_matrix <- as.matrix(mdtRate_dtm_test)
+mdtRate_test_matrix <- as.matrix(mdtRate_test_matrix)
+mdtRate_train_matrix <- cbind(mdtRate_test_matrix, mdtRate[83:102, ]$Medium.Term.Rate)
+colnames(mdtRate_test_matrix)[ncol(mdtRate_test_matrix)] <- "tone"
+mdRate_testSet <- as.data.frame(mdtRate_test_matrix)
+
+```
+
+
+##### Remove factors whose levels are less than 2
+
+```{r}
+
+mdRate_trainFac <- mdRate_trainingset[, sapply(mdRate_trainingset, nlevels) > 1]
+
+```
+
+
+```{r}
+mdRate_testFac <- mdRate_testSet[, sapply(mdRate_testSet, nlevels) > 1]
+```
+
+
+```{r}
+
+mdRate_model <- train(tone ~., data = mdRate_fac, method = 'svmLinear3')
+
+```
+
+
+```{r}
+#Build the prediction 
+mdRateModel_result <- predict(mdRate_model, newdata = mdRate_testSet)
+
+```
+
+
+```{r}
+
+check_accuracy <- as.data.frame(cbind(prediction = model_ted_talk_result, rating = test_dat$highest_rating))
+
+check_accuracy <- check_accuracy %>% mutate(prediction = as.integer(prediction) - 1)
+check_accuracy$accuracy <- if_else(check_accuracy$prediction == check_accuracy$rating, 1, 0)
+round(prop.table(table(check_accuracy$accuracy)), 3)
+
+classificationMetrics(as.integer(test_dat$highest_rating), model_ted_talk_result)
+most_common_misclassified_ratings = check_accuracy %>% filter(check_accuracy$accuracy == 0) %>%
+ group_by(rating) %>%
+ summarise(Count = n()) %>%
+ arrange(desc(Count)) %>%
+ head(3)
+##Most commong missclassified rating
+levels(train_dat$highest_rating)[most_common_misclassified_ratings$rating]
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
