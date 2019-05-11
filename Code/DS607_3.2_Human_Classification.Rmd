@@ -1,0 +1,103 @@
+---
+title: "Section 3.2 Human Classification"
+author: "Alexander Ng"
+date: "5/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(lubridate)
+library(kableExtra)
+library(knitr)
+```
+
+## Human Classification
+
+We explain the method of manually classifying each FOMC statement by 5 criteria and illustrate the approach with an example.
+Providing transparency to the classification method is essential to understand the challenges even to human judgment of understanding "FedSpeak".  
+
+If we now re-load the merged dataframe and examine the columns,
+we chose a binary or ternary classification for each of 5 attributes that were labelled.   We will define the assignment of classifications to each attribute since there are unique challenges to each one.
+
+```{r}
+rds_filename = "fomc_merged_data_v2.rds"
+
+mgData = readRDS(rds_filename)
+
+str(mgData)
+```
+
+### Economic Growth
+
+The attribute Economic.Growth is assigned one of 3 classification:  Up, Flat or Down.   It refers to the near term trend in economic growth since the last FOMC meeting or within the last quarter (whichever is mentioned).   Most statements give an explicit assessment of economic growth in the first 3 sentences.  An example of a UP classification is the July 29, 2015 statement (below coloring is mine):
+
+>Information received since the Federal Open Market Committee met in June indicates that $\color{red}{\text{economic activity has been expanding moderately in recent months}}$. 
+
+An example of a FLAT classification is the March 18, 2015 statement:
+
+>Information received since ... January suggests that $\color{red}{\text{economic growth has moderated somewhat.}}$
+
+An example of a DOWN classification is in the May 3, 2017 statement:
+
+>Information received since ... March indicates that ... $\color{red}{\text{growth in economic activity slowed.}}$.
+
+Rarely does the FOMC statement exclude an assessment of near-term economic growth trends in the US.
+
+### Employment Growth
+
+The attribute Employment.Growth refers to the near-term trend of the labor market in the US.  We use the same classification values as for Economic.Growth.  If the labor market indicators are improving, we mark the indicator as UP.   This requires a decrease in the unemployment rate (if stated) and/or an increase in jobs creation.   These two key indicators broadly define the health of the labor market.  
+
+An example of an UP classification is in the Feb 1, 2017 statement:
+
+>the labor market has continued to strengthen ...
+>Job gains remained solid and the unemployment rate
+>stayed near its recent low. 
+
+An example of a FLAT classification is the Dec 13, 2011 statement where the indicators are mixed:
+
+>While indicators point to some improvement in overall labor market conditions, >the unemployment rate remains elevated.
+
+An example of a DOWN classification is the April 29, 2009 statement where the labor market is discussed indirectly:
+
+>Household spending has shown signs of stabilizing but remains constrained by >$\color{red}{\text{ongoing job losses}}$, lower housing wealth, and tight >credit. Weak sales prospects and difficulties in obtaining credit have led >businesses to cut back on inventories, fixed investment, and $\color{red}{\text{staffing.}}$
+
+Sometimes the FOMC statement does not mention labor market conditions.  In this case, we assume information is irrelevant or not a concern and assign a FLAT classification.
+
+### Inflation
+
+When measuring inflation, we refer to the realized price fluctuation of core PCE (where available) in the period since the last FOMC meeting.  Sometimes, this is not explicitly stated.   Then, we see the overall price movements (including food and energy) since the last meeting.   Where this is unstated, we rely on market driven indicators of medium term inflation risk as described by the statement.   We don't rely on shifts in the long term inflation expectations.   Of the various metrics from the FOMC statements, this indicator is the most challenging to classify due to the multiple dimensions of inflation.
+
+An example of a UP classification comes from the April 27, 2011 meeting:
+
+>$\color{red}{\text{Commodity prices have risen}}$ significantly since last summer, and concerns about global supplies of crude oil have contributed to a further $\color{red}{\text{increase in oil prices}}$ since the Committee met in March.  $\color{red}{\text{Inflation has picked up}}$ in recent months, but longer-term inflation expectations have remained stable and measures of underlying inflation are still subdued.
+
+An example of a FLAT classification comes from the November 8, 2018 meeting.  Note that the FOMC views a 2 percent inflation rate as the natural rate of inflation, thus inflation near 2 percent is perceived as flat.   FLAT refers to either an absence of information or a rate near the natural rate.
+
+>On a 12-month basis, $\color{red}{\text{both overall inflation and inflation for items other than food and energy remain near 2 percent}}$. Indicators of longer-term inflation expectations are little changed, on balance.
+
+An example of a DOWN classification comes from the Jan 28, 2009 statement during the depths of the final crisis.
+
+>In light of the $\color{red}{\text{declines in the prices}}$ of energy and other commodities in recent months and the prospects for considerable economic slack, the Committee expects that $\color{red}{\text{inflation pressures}}$ will remain subdued in coming quarters. Moreover, the Committee sees some risk that inflation could persist for a time below rates that best foster economic growth and price stability in the longer term.
+
+### Medium Term Outlook
+
+The FOMC tries to provide guidance of where it believe the 1-2 year outlook for the target fed funds rate will be positioned based on current information.   Medium Term Outlook attempts to measure this guidance:
+
+An example of a HAWK classification comes from the March 15, 2017 statement:
+
+>The Committee expects that economic conditions will evolve in a manner that will warrant $\color{red}{\text{gradual increases in the federal funds rate}}$; the federal funds rate is likely to remain, for some time, below levels that are expected to prevail in the longer run. However, the actual path of the federal funds rate will depend on the economic outlook as informed by incoming data.
+ 
+ An example of a DOVE classification comes from the Sept 17, 2014 statement:
+
+>the Committee today reaffirmed its view that a $\color{red}{\text{highly accommodative stance of monetary policy remains appropriate}}$. In determining how long to maintain the current 0 to 1/4 percent target range for the federal funds rate, the Committee will assess progress--both realized and expected--toward its objectives of maximum employment and 2 percent inflation. This assessment will take into account a wide range of information, including measures of labor market conditions, indicators of inflation pressures and inflation expectations, and readings on financial developments. The Committee continues to anticipate, based on its assessment of these factors, that it likely will be appropriate to $\color{red}{\text{maintain the current target range for the federal funds rate for a considerable time}}$ after the asset purchase program ends, especially if projected inflation continues to run below the Committee's 2 percent longer-run goal, and provided that longer-term inflation expectations remain well anchored.
+
+### Policy Rate
+
+This last attribute is objective not subjective.   It identifies whether the FOMC decides to raise, keep unchanged or lower the federal funds target rate.   On that basis, the classification is assigned.
+
