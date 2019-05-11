@@ -20,7 +20,6 @@ library(lattice)
 library(kernlab)
 library(mlbench)
 library(caretEnsemble)
-#library(klaR)
 library(nnet)
 library(LiblineaR)
 ```
@@ -33,6 +32,12 @@ fomc_data <-readRDS(file = "fomc_merged_data_v2.rds")
 ```
 
 
+```{r}
+head(select(fomc_data, Index,year,statement.dates,statement.length,date_mdy,Employment.Growth,Economic.Growth,Inflation,Medium.Term.Rate,Policy.Rate))
+
+```
+
+
 #### First, randomising the rows so that the statements from different eras of the economic movements can be well represented
 
 ```{r}
@@ -41,12 +46,6 @@ set.seed(1234567)
 
 fomc_Rand <- fomc_data[sample(nrow(fomc_data)),]
 
-```
-
-
-```{r}
-
-head(select(fomc_Rand, Index, statement.dates, date_mdy))
 ```
 
 
@@ -67,103 +66,341 @@ fomc_dataX$statement.content <- str_replace_all(fomc_dataX$statement.content, cu
 ```
 
 
-#### Classification targetting the `Medium.Term.Rate` variable
+##### Prepare the data to serve for all the classification
 
 ```{r}
 
-mdtRate <- fomc_dataX %>% select(Index, statement.content, statement.dates, date_mdy, Medium.Term.Rate)
+# form a corpus
+corpus <- VCorpus(VectorSource(fomc_dataX$statement.content))
 
-```
+# Remove Punctuation
+corpus <- tm_map(corpus, content_transformer(removePunctuation))
 
+# Remove numbers
+corpus <- tm_map(corpus, removeNumbers)
 
-```{r}
+# Convert to lower case
+corpus <- tm_map(corpus, content_transformer(tolower))
 
-mRateTrainObs <- sample(nrow(mdtRate), .80 * nrow(mdtRate), replace = FALSE)
-mRateTestObs <- sample(nrow(mdtRate), .20 * nrow(mdtRate), replace = FALSE)
-mRateTrain_dat <- mdtRate[mRateTrainObs,]
-mRateTest_dat <- mdtRate[mRateTestObs,]
+# Remove stop words
+corpus <- tm_map(corpus, content_transformer(removeWords), stopwords("english"))
 
-```
-
-
-
-```{r}
-train_corpus <- VCorpus(VectorSource(mRateTrain_dat$Medium.Term.Rate))
-##Removing Punctuation
-train_corpus <- tm_map(train_corpus, content_transformer(removePunctuation))
-##Removing numbers
-train_corpus <- tm_map(train_corpus, removeNumbers)
-##Converting to lower case
-train_corpus <- tm_map(train_corpus, content_transformer(tolower))
-##Removing stop words
-train_corpus <- tm_map(train_corpus, content_transformer(removeWords), stopwords("english"))
 ##Stemming
-train_corpus <- tm_map(train_corpus, stemDocument)
-##Whitespace
-train_corpus <- tm_map(train_corpus, stripWhitespace)
+corpus <- tm_map(corpus, stemDocument)
+
+# Remove Whitespace
+corpus <- tm_map(corpus, stripWhitespace)
+
 # Create Document Term Matrix
-dtm_train <- DocumentTermMatrix(train_corpus)
-train_corpus <- removeSparseTerms(dtm_train, 0.85)
-dtm_train_matrix <- as.matrix(train_corpus)
-dtm_train_matrix <- cbind(dtm_train_matrix, mRateTrain_dat$Medium.Term.Rate)
-colnames(dtm_train_matrix)[ncol(dtm_train_matrix)] <- "tone"
-training_set <- as.data.frame(dtm_train_matrix)
-#training_set$tone <- as.factor(tolower(training_set$tone))
+dtm <- DocumentTermMatrix(corpus)
+
+# handle sparsity
+corpusX <- removeSparseTerms(dtm, 0.95)
+
+# convert to matrix
+data_matrix <- as.matrix(corpusX)
+
+```
+
+
+#### The `Medium.Term.Rate` variable
+
+```{r}
+
+mRate <- data_matrix
+
+# attach the 'medium.term.rate' column
+mRate_matrix <- cbind(mRate, fomc_dataX$Medium.Term.Rate)
+
+# rename it to 'tone'
+colnames(mRate_matrix)[ncol(mRate_matrix)] <- "tone"
+
+# convert to data frame
+mRateData <- as.data.frame(mRate_matrix)
+
+# convert 'tone' to lower case and make it a factor column as well
+mRateData$tone <- as.factor(tolower(mRateData$tone))
 
 ```
 
 
 ```{r}
 
-mdtRate_model <- train(tone ~., data = training_set, method = 'svmLinear3')
+head(mRateData[,ncol(mRateData)])
+```
+
+
+```{r}
+
+mRate_n <- nrow(mRateData)
+mRateTrainVolume <- round(mRate_n * 0.80)
+
+set.seed(314)
+
+mRateTrainIndex <- sample(mRate_n, mRateTrainVolume)
+mRateTrain <- mRateData[mRateTrainIndex,]
+mRateTest <- mRateData[-mRateTrainIndex,]
 
 ```
 
 
 ```{r}
-#Preparing our test data. It's the same repetitive procedure.
-test_corpus <- VCorpus(VectorSource(mRateTest_dat$Medium.Term.Rate))
-##Removing Punctuation
-test_corpus <- tm_map(test_corpus, content_transformer(removePunctuation))
-##Removing numbers
-test_corpus <- tm_map(test_corpus, removeNumbers)
-##Converting to lower case
-test_corpus <- tm_map(test_corpus, content_transformer(tolower))
-##Removing stop words
-test_corpus <- tm_map(test_corpus, content_transformer(removeWords), stopwords("english"))
-##Stemming
-test_corpus <- tm_map(test_corpus, stemDocument)
-##Whitespace
-test_corpus <- tm_map(test_corpus, stripWhitespace)
+
+mRateModel <- train(tone ~., data = mRateTrain, method = 'svmLinear3')
+
+```
+
+
+```{r}
+
+mRateResult <- predict(mRateModel, newdata = mRateTest)
+
+```
+
+
+```{r}
+( mRateStats = confusionMatrix( mRateResult, mRateTest$tone))
+```
+
+
+#### The `Economic.Growth` variable
+
+```{r}
+
+econGrowth <- data_matrix
+
+# attach the 'Economic.Growth' column
+econG_matrix <- cbind(econGrowth, tolower(fomc_dataX$Economic.Growth))
+
+# rename it to 'growth'
+colnames(econG_matrix)[ncol(econG_matrix)] <- "egrowth"
+
+# convert to data frame
+econData <- as.data.frame(econG_matrix)
+
+# convert 'growth' to a factor column as well
+econData$egrowth <- as.factor(econData$egrowth)
+
+```
+
+
+
+```{r}
+
+econ_n <- nrow(econData)
+econTrainVolume <- round(econ_n * 0.80)
+
+set.seed(314)
+
+econTrainIndex <- sample(econ_n, econTrainVolume)
+econTrain <- econData[econTrainIndex,]
+econTest <- econData[-econTrainIndex,]
+
+```
+
+
+```{r}
+
+econModel <- train(egrowth ~., data = econTrain, method = 'svmLinear3')
+
+```
+
+
+```{r}
+
+econResult <- predict(econModel, newdata = econTest)
+
+```
+
+
+```{r}
+( econStats = confusionMatrix( econResult, econTest$egrowth))
+```
+
+
+#### The `Inflation` variable
+
+
+```{r}
+
 # Create Document Term Matrix
-dtm_test <- DocumentTermMatrix(test_corpus)
-test_corpus <- removeSparseTerms(dtm_test, 0.85)
-dtm_test_matrix <- as.matrix(test_corpus)
+dtmI <- DocumentTermMatrix(corpus)
+
+# handle sparsity
+corpusI <- removeSparseTerms(dtm, 0.94)
+
+# convert to matrix
+data_matrixI <- as.matrix(corpusI)
+
+
+inflation <- data_matrixI
+
+# attach the 'Inflation' column
+inflation_matrix <- cbind(inflation, tolower(fomc_dataX$Inflation))
+
+# rename it to 'inflation'
+colnames(inflation_matrix)[ncol(inflation_matrix)] <- "inflation"
+
+# convert to data frame
+inflationData <- as.data.frame(inflation_matrix)
+
+# convert 'inflation' to a factor column
+inflationData$inflation <- as.factor(inflationData$inflation)
+
+```
+
+##### remove columns that will not contribute meaninfully to the model fitting
+
+```{r}
+
+infDataX <- inflationData[, -which(names(inflationData) %in% c("although", "william", "william", "richard", "raphael", "randal", "san", "sarah","sandra", "togeth", "timothi" , "also","balanceconsist","basispoint","committe","dudley","elizabeth","esther","fomc"))]
+ 
+```
+
+
+```{r}
+
+inf_n <- nrow(infDataX)
+infTrainVolume <- round(inf_n * 0.70)
+
+set.seed(314)
+
+infTrainIndex <- sample(inf_n, infTrainVolume)
+infTrain <- infDataX[infTrainIndex,]
+infTest <- infDataX[-infTrainIndex,]
 
 ```
 
 
 ```{r}
-cat(str(training_set$tone))
+
+inflationModel <- train(inflation ~., data = infTrain, method="svmLinear3")
 
 ```
+
 
 ```{r}
 
-mrate_model_result <- predict(mdtRate_model, newdata = dtm_test_matrix)
+inflationResult <- predict(inflationModel, newdata = infTest)
+
+```
+
+
+```{r}
+( econStats = confusionMatrix( inflationResult, infTest$inflation))
+```
+
+
+#### The `Employment.Growth` variable
+
+```{r}
+
+empGrowth <- data_matrix
+
+# attach the 'Employment.Growth column
+emp_matrix <- cbind(empGrowth, tolower(fomc_dataX$Employment.Growth))
+
+# rename it to 'empGrowth'
+colnames(emp_matrix)[ncol(emp_matrix)] <- "empGrowth"
+
+# convert to data frame
+empData <- as.data.frame(emp_matrix)
+
+# convert 'empGrowth' to a factor column as well
+empData$empGrowth <- as.factor(empData$empGrowth)
 
 ```
 
 
 
+```{r}
+
+emp_n <- nrow(empData)
+empTrainVolume <- round(emp_n * 0.80)
+
+set.seed(314)
+
+empTrainIndex <- sample(emp_n, empTrainVolume)
+empTrain <- empData[empTrainIndex,]
+empTest <- empData[-empTrainIndex,]
+
+```
+
+
+```{r}
+
+empModel <- train(empGrowth ~., data = empTrain, method = 'svmLinear3')
+
+```
+
+
+```{r}
+
+empResult <- predict(empModel, newdata = empTest)
+
+```
+
+
+```{r}
+( empStats = confusionMatrix( empResult, empTest$empGrowth))
+```
 
 
 
+#### The `Policy.Rate` variable
+
+```{r}
+
+plRate <- data_matrix
+
+# attach the 'Policy.Rate' column
+pl_matrix <- cbind(plRate, tolower(fomc_dataX$Policy.Rate))
+
+# rename it to 'empGrowth'
+colnames(pl_matrix)[ncol(pl_matrix)] <- "policy"
+
+# convert to data frame
+plData <- as.data.frame(pl_matrix)
+
+# convert 'policy' to a factor column as well
+plData$policy <- as.factor(plData$policy)
+
+```
 
 
 
+```{r}
+
+pl_n <- nrow(plData)
+
+plTrainVolume <- round(pl_n * 0.80)
+
+set.seed(314)
+
+plTrainIndex <- sample(pl_n, plTrainVolume)
+plTrain <- plData[empTrainIndex,]
+plTest <- plData[-empTrainIndex,]
+
+```
 
 
+```{r}
+
+plModel <- train(policy ~., data = plTrain, method = 'svmLinear3')
+
+```
+
+
+```{r}
+
+plResult <- predict(plModel, newdata = plTest)
+
+```
+
+
+```{r}
+( plStats = confusionMatrix( plResult, plTest$policy))
+```
 
 
 
