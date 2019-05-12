@@ -27,7 +27,7 @@ library(LiblineaR) # new
 
 5.1 Text Classifications
 
-##### The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than teo classes) while only one (`Medium.Term.Rate`) is binary
+##### The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than two classes) while only one (`Medium.Term.Rate`) is binary
 
 ##### Read the data
 
@@ -113,7 +113,7 @@ data_matrix <- as.matrix(corpusX)
 
 #### Classifications
 
-##### From here, were are going to perform classifications based on `Medium.Term.Rate`, `Employment.Growth`, `Economic.Growth`, `Inflation`, `Medium.Term.Rate`, and `Policy.Rate`   variables
+##### From here, were are going to perform classifications based on `Medium.Term.Rate`, `Employment.Growth`, `Economic.Growth`, `Inflation`, and `Policy.Rate` variables
 
 
 5.1.1 `Medium.Term.Rate`
@@ -230,7 +230,9 @@ econResult <- predict(econModel, newdata = econTest)
 ```
 
 
-### The `Inflation` variable
+5.1.3 `Inflation`
+
+##### Classification targeting the `Inflation` variable
 
 
 ```{r}
@@ -305,7 +307,9 @@ inflationResult <- predict(inflationModel, newdata = infTest)
 ```
 
 
-### The `Employment.Growth` variable
+5.1.4 `Employment.Growth`
+
+##### Classification targeting the `Employment.Growth` variable
 
 ```{r}
 
@@ -359,8 +363,9 @@ empResult <- predict(empModel, newdata = empTest)
 ```
 
 
+5.1.5 `Policy.Rate`
 
-### Policy.Rate
+##### Classification targeting the `Policy.Rate` variable
 
 ```{r}
 
@@ -416,7 +421,7 @@ plResult <- predict(plModel, newdata = plTest)
 ```
 
 
-## Summary and Conclusion
+5.1.6 Summary and Conclusion
 
 Table of summary
 
