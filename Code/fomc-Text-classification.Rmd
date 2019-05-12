@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(caret)
 library(dplyr)
-library(tidytext)
 library(tm)
 library(e1071) # new
 library(R.utils)
@@ -22,10 +21,11 @@ library(mlbench) # new
 library(caretEnsemble) # new
 library(nnet) # new
 library(LiblineaR) # new
+library(kableExtra)
 ```
 
 
-5.1 Text Classifications
+## 5.1 Text Classifications
 
 ##### The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than two classes) while only one (`Medium.Term.Rate`) is binary.
 
@@ -112,12 +112,8 @@ data_matrix <- as.matrix(corpusX)
 ```
 
 
-#### Classifications
 
-##### From here, were are going to perform classifications based on `Medium.Term.Rate`, `Employment.Growth`, `Economic.Growth`, `Inflation`, and `Policy.Rate` variables
-
-
-5.1.1 `Medium.Term.Rate`
+### 5.1.1 `Medium.Term.Rate`
 
 ##### Classification targetting the `Medium.Term.Rate` variable
 
@@ -174,7 +170,7 @@ mRateResult <- predict(mRateModel, newdata = mRateTest)
 ```
 
 
-5.1.2 `Economic.Growth`
+### 5.1.2 `Economic.Growth`
 
 ##### Classification targeting the `Economic.Growth` variable
 
@@ -231,7 +227,7 @@ econResult <- predict(econModel, newdata = econTest)
 ```
 
 
-5.1.3 `Inflation`
+### 5.1.3 `Inflation`
 
 ##### Classification targeting the `Inflation` variable
 
@@ -308,7 +304,7 @@ inflationResult <- predict(inflationModel, newdata = infTest)
 ```
 
 
-5.1.4 `Employment.Growth`
+### 5.1.4 `Employment.Growth`
 
 ##### Classification targeting the `Employment.Growth` variable
 
@@ -364,7 +360,7 @@ empResult <- predict(empModel, newdata = empTest)
 ```
 
 
-5.1.5 `Policy.Rate`
+### 5.1.5 `Policy.Rate`
 
 ##### Classification targeting the `Policy.Rate` variable
 
@@ -422,7 +418,7 @@ plResult <- predict(plModel, newdata = plTest)
 ```
 
 
-5.1.6 Summary and Conclusion
+### 5.1.6 Summary and Conclusion
 
 Table of summary
 
@@ -430,10 +426,17 @@ Table of summary
 
 results <- tibble(variable = c("Medium.Term.Rate","Employment.Growth","Economic.Growth","Inflation","Policy.Rate"), modelling = c("80 : 20", "80 : 20", "58 : 42", "70 : 30", "80 : 20"), accuracy= c(100, 90, 79.1, 64.52, 95)) 
 
-names(results)[names(results) == "accuracy"] <- "accuracy(%)"
-names(results)[names(results) == "modelling"] <- "modelling(Train : Test)"
+```
 
-results
+
+```{r fig.width = 10, fig.asp = .80}
+
+ kable(results,
+      col.names = linebreak(c("Variable", "Modelling (Train : Test)", "Accuracy (%)"), align = "c")) %>%
+  kable_styling("striped", full_width = T) %>%
+  column_spec(1:3, bold = T, color = "#000") %>%
+  row_spec(1:5, bold = T, color = "#000")
+
 ```
 
 
@@ -442,6 +445,11 @@ For some of the variables, extra fine-tuning of the data was not needed to achie
 We can conclude that these values obtained, though not perfect, did go a long way to align with the human based scoring/classification of the economy trends based on the variables considered within the selected years. There are much room left for improvements and further analysis but we cannot go beyond this level right now as time will not permit us
 
 
+## 5.2 Reflection on Text Classification
+
+Text classification of FOMC statements is not generally a research objective but we think it is worthwhile.   Classification addresses a potential need:  Can a machine correctly infer the opinion or direction of forward guidance or policy decisions in a structured text by the FOMC?   In this regard, the classification problem for the FOMC is isomorphic to the Ham-Spam classification of incoming emails by an email program.  However, the reader may object that FOMC statements are not so voluminous to require automated processing.   Our response is that FOMC statements are merely the first baby step in a much larger classification problem:  the public communications of all FOMC and Federal Reserve system members.   As previously explained, the FOMC members give speeches, publish articles, appear on TV interviews.   Moreover, FOMC meeting minutes are released several weeks after the policy statement is released.  These are much longer and required more effort to read and digest.  Also, the FOMC transcripts released several years after the meeting may run to over 100 pages each.  They contain word for word replay of the entire meeting (excluding private discussions).   Lastly, there are at least 16 relevant central banks around the world of interest.  Although the Fed is the world's more important central bank, the ECB, Bank of England, Bank of Japan, Bank of China, Bank of Australia, Bank of New Zealand, all produce communications.  In summary, no single person can read all central bank communications.   The ability to extract key messages from plain texts remains a valuable capability.
+
+Our machine learning prediction backtest suggests that automated classification is feasible to detect limited features of a central bank communication.   Our algorithm succeeds at detecting medium term rate outlooks, employment growth and policy rate changes.  At these tasks, we have attained accuracy rates between 90-100 percent.   The most challenging attribute to understand is inflation (64.5%).  This is consistent with financial practitioner opinion.  Inflation is the most complex of these areas to quantify, control and manage.  That is because inflation has 4 distinct aspects:  realized inflation (price changes from past surveys), market based real yields of TIPS bonds and inflation swaps, and long term expectations of inflation, inflation measured with or without volatile sectors: food and energy.   Because the statements may treat some or all of these aspects we believe accuracy in understanding FOMC inflation views is hard.
 
 
 
