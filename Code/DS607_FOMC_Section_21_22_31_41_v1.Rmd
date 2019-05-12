@@ -1,0 +1,392 @@
+---
+title: "DS607_FOMC_Statement_Analysis_Sections_2.1_2.2_3.1_4.1"
+author: "Jagdish Chhabria"
+date: "April 29, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load required packages
+
+```{r download statements}
+library(rlang)
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(tidyr)
+library(xlsx)
+library(RCurl)
+library(XML)
+library(kableExtra)
+library(tm)
+library(ngram)
+library(SentimentAnalysis)
+library(tidytext)
+library(wordcloud)
+library(ggridges)
+library(ggplot2)
+```
+
+
+### Section 2.1
+### Background
+
+The Federal Reserve System - commonly called "the Fed" - serves as the central bank of the United States. Congress passed the Federal Reserve Act in 1913, which President Woodrow Wilson supported and signed into law on December 23, 1913. Congress structured the Fed as a distinctly American version of a central bank: a "decentralized" central bank, with Reserve Banks and Branches in 12 Districts spread across the country and coordinated by a Board of Governors in Washington, D.C. Congress also gave the Fed System a mixture of public and private characteristics. The 12 Reserve Banks share many features with private-sector corporations, including boards of directors and stockholders (the member banks within their Districts). The Board of Governors, though, is an independent government agency, with oversight responsibilities for the Reserve Banks.
+
+The Fed conducts monetary policy, supervises and regulates banking, serves as lender of last resort, maintains an effective and efficient payments system, and serves as banker for banks and the U.S. government. Conducting the nation's monetary policy is one of the most important - and often the most visible - functions of the Fed.
+
+### Monetary Policy
+So, what is monetary policy? Simply put, it refers to the actions taken by the Fed to influence the supply of money and credit in order to foster price stability (i.e. control inflation) and maintain maximum sustainable employment.  These two objectives are called the "dual mandate".  This distinguishes the Fed from other central banks which typically have a single mandate to control inflation.   
+
+The Fed's instrument for implementing monetary policy is the FOMC's target for the federal funds rate - the interest rate at which banks lend to each other overnight. By buying and selling U.S. government securities in the open market, the Fed influences the interest rate that banks charge each other. Movements in this rate and expectations about those changes influence all other interest rates and asset prices in the economy.
+
+The Federal Reserve also issues the nation's currency (Federal Reserve notes) and manages the amount of funds the banking system holds as reserves. Currency and reserves make up what is called the monetary base.  However, because the vast majority of money in the US economy is in intangible form rather than physical notes, monetary policy focuses on interest rates instead of currency supply.
+
+In the early days of the FOMC, controversy swirled around how to structure the vote. Should monetary policy be set by the 12 Reserve Banks or the Board of Governors? Or both? In 1935 Congress decided that the seven Governors would vote along with only five of the 12 presidents. The president of the New York Fed always votes - since the Open Market Trading Desk operates in that District - along with four presidents who rotate from among the groups shown below. In that way, voting members always come from different parts of the country.
+
+### Section 2.2
+### FOMC Introduction
+As long as the U.S. economy is growing steadily and inflation is low, few people give much thought to the Federal Open Market Committee (FOMC), the group within the Federal Reserve System charged with setting monetary policy. Yet, when economic volatility makes the evening news, this Committee and its activities become much more prominent. Investors and workers, shoppers and savers all pay more attention to the FOMC's decisions and the wording of its announcements at the end of each meeting.
+
+Why? Because the decisions made by the FOMC have a ripple effect throughout the economy. The FOMC is a key part of the Federal Reserve System, which serves as the central bank of the United States. Among the Fed's duties are managing the growth of the money supply, providing liquidity in times of crisis, and ensuring the integrity of the financial system. The FOMC's decisions to change the growth of the nation's money supply affect the availability of credit and the level of interest rates that businesses and consumers pay. Those changes in money supply and interest rates, in turn, influence the nation's economic growth and employment in the short run and the general level of prices in the long run.
+
+## FOMC Meetings
+The FOMC meets regularly - typically every six to eight weeks - in Washington, D.C., although the Committee can and does meet more often by phone or videoconference if needed. The meetings are generally one-day or two-day events, with the two-day meetings providing more time to discuss a special topic. Around the table in the Federal Reserve Board's headquarters sit all 19 FOMC participants (seven Governors and 12 Reserve Bank presidents) as well as select staff and economists from the Board and the Reserve Banks. Because of the nature of the discussions, attendance is restricted. A Reserve Bank president, for instance, typically brings along only one staff member, usually his or her director of research.
+
+The objective at each meeting is to set the Committee's target for the federal funds rate - the interest rate at which banks lend to each other overnight - at a level that will support the two key objectives of U.S. monetary policy: price stability and maximum sustainable economic growth. The meeting's agenda follows a structured and logical process that results in well-informed and thoroughly deliberated decisions on the future course of monetary policy.
+
+### Structure of a Typical Meeting
+
+The meeting begins with a report from the manager of the System Open Market Account (SOMA) at the Federal Reserve Bank of New York, who is responsible for keeping the federal funds rate close to the target level set by the FOMC. The manager explains how well the Open Market Trading Desk has done in hitting the target level since the last FOMC meeting and discusses recent developments in the financial and foreign exchange markets. Up next is the Federal Reserve Board's director of the Division of Research and Statistics, along with the director of the Division of International Finance. They review the Board staff's outlook for the U.S. economy and foreign economies. This detailed forecast is circulated the week before the meeting to FOMC members in what is called the "Greenbook" - named for its green cover in the days when it was a printed document.
+
+Then the meeting progresses to the first of two "go-rounds," which are the core of FOMC meetings. During the first go-round, all of the Fed Governors and Reserve Bank presidents discuss how they see economic and financial conditions. The Reserve Bank presidents speak about conditions in their Districts, as well as offering their views on national economic conditions. The data and information discussed vary by region and therefore spotlight a wide range of industries. For example, one would expect the review of regional conditions in the San Francisco District to lend insight into the tech sector of Silicon Valley. 
+
+The policymakers have prepared for this go-round through weeks of information gathering. Before the FOMC meeting, each Reserve Bank prepares a "Summary of Commentary on Current Economic Conditions," which is published two weeks before each meeting in what most people call the "Beige Book," for the color of its cover when originally printed. One Federal Reserve Bank, designated on a rotating basis, publishes the overall summary of the 12 District reports. The Reserve Bank presidents have also gathered information by talking with executives in a variety of business sectors and through meetings with the Banks' boards of directors and advisory councils. 
+
+This first go-round covers valuable information about economic activity throughout the country, measured in hard data and recent anecdotal information, as well as the analysis and interpretation conveyed by the policymakers sitting around the table. This is a key way in which each region of the U.S. has input into the making of national monetary policy. This portion of the meeting concludes with the FOMC Chair summarizing the discussion and providing the Chair's own view of the economy. At this point, the policy discussion begins with the Federal Reserve Board's director of the Division of Monetary Affairs, who outlines the Committee's various policy options. 
+
+The outlook options could include no change, an increase, or a decrease in the federal funds rate target. Each option is described, along with a clear rationale, the pros and cons, and some alternatives for how the Committee could explain its decision in a public statement to be released that afternoon. Then, there is a second go-round. The Reserve Bank presidents and Governors each make the best case for the policy alternative they prefer, given current economic conditions and their personal outlook for the economy. They also comment on how they think the statement explaining the decision should be worded. One of the most important aspects of an FOMC meeting is that all voices matter. The analysis and viewpoints of each committee participant - whether a voting member or not - play an instrumental role in the FOMC's policy decisions.
+
+At the end of this policy go-round, the Chair summarizes a proposal for action based on the Committee's discussion, as well as a proposed statement to explain the policy decision. The Fed Governors and presidents then get a chance to question or comment on the Chair's proposed approach. Once a motion for a decision is on the table, the Committee tries to come to a consensus through its deliberations. Although the final decision is most often one that all can support, there are times when some differences of opinion may remain, and voting members may dissent.  At the end of the policy discussion, all seven of the Fed Governors and the five voting Reserve Bank presidents cast a formal vote on the proposed decision and the wording of the statement.
+
+### Announcing the Policy Decision
+
+After the vote has been taken, the FOMC publicly announces its policy decision at 2:15 p.m. The announcement includes the federal funds rate target, the statement explaining its actions, and the vote tally, including the names of the voters and the preferred action of those who dissented.
+
+In addition, the FOMC releases its official minutes three weeks after each meeting. The minutes include a more complete explanation of the views expressed, which allows the public to get a better sense of the range of views within the FOMC and promotes awareness and understanding of how monetary policy is made. In recent years, the FOMC has improved communications with the public.   What's more, the FOMC now releases Committee participants' projections for the economy and inflation four times a year, which provides added insight into the policymakers' perspectives.  
+
+### Implementing Policy
+
+Once the FOMC establishes a target for the federal funds rate, the Open Market Trading Desk at the Federal Reserve Bank of New York conducts daily open market operations - buying or selling U.S. government securities on the open market - as necessary to achieve the federal funds rate target. Open market operations affect the amount of money and credit available in the banking system, thereby affecting interest rates, which in turn affect the spending decisions of households and businesses and ultimately the overall performance of the U.S. economy.
+
+### Connecting To Our Project
+
+This detailed description of the FOMC serves two purposes: (a) to describe the monetary policymaking activities of the FOMC (b) to identify the dataset which we will analyze.  We are going to focus exclusively on the FOMC policy statements released at 2:15pm ET.  Anecdotally, these policy statements have the greatest short term impact on financial markets and potential for surprise.  In the next section, we identify past research that examines the FOMC policy statements from a data science perspective.
+
+### Section 3.1
+### Collate links to FOMC statements from January 2007 till date (May 2019)
+
+This is one of the primary sources of data. The URL for each FOMC statement from  January 2007 onwards is collated from the following website (https://www.federalreserve.gov/monetarypolicy). While historical statements are available from 1994 onwards, the choice of starting point i.e. January 2007 was made to strike a balance between quantity and quality (adequate representation through different periods of the economic cycle such as recession (2009) and growth (2018).
+
+There is a total of 102 statements published during this period.
+
+```{r}
+
+links<-c("https://www.federalreserve.gov/newsevents/pressreleases/monetary20190130a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20190320a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20190501a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180131a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180321a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180502a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180613a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180801a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180926a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20181108a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20181219a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170201a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170315a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170503a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170614a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170726a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170920a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20171101a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20171213a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160127a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160316a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160427a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160615a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160727a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160921a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20161102a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20161214a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150128a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150318a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150429a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150617a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150729a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150917a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20151028a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20151216a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140129a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140319a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140430a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140618a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140730a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140917a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20141029a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20141217a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130130a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130320a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130501a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130619a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130731a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130918a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20131030a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20131218a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120125a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120313a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120425a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120620a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120801a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120913a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20121024a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20121212a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110126a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110315a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110427a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110622a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110809a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110921a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20111102a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20111213a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100127a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100316a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100428a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100623a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100810a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100921a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20101103a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20101214a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090128a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090318a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090429a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090624a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090812a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090923a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20091104a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20091216a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080122b.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080130a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080318a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080430a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080625a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080805a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080916a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20081008a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20081029a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20081216b.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070131a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070321a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070509a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070618a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070807a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070817b.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070918a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20071031a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20071211a.htm"
+)
+
+length(links)
+
+```
+
+### Data Staging - prepare metadata for data extraction and create a dataframe
+
+```{r}
+
+# Extract year of publication from the statement's release date, and create a data frame with date, year and URL. 
+
+statement.dates<-NULL
+year<-NULL
+for(i in seq(from=1, to=length(links))) {
+  statement.dates[i]<-(str_extract(links[i],"[[:digit:]]+"))
+  year[i]<-substr(statement.dates[i],1,4)
+}
+
+reports<-data.frame(year,statement.dates, links)
+
+# Convert factors to characters
+
+reports %<>% mutate_if(is.factor, as.character)%>% arrange(statement.dates)
+
+```
+
+### Data Extraction via web-scraping
+
+```{r}
+
+# Loop through the statement links and scrape the content from the Federal Reserve website.
+# Discard irrelevant portions of the extracted content i.e. preliminary paragraphs and last paragraph.
+
+statement.content<-NULL
+statement.length<-NULL
+for(i in seq(from=1, to=length(reports$links))) {
+stm.url<-getURL(reports$links[i])
+stm.tree<-htmlTreeParse(stm.url,useInternal=TRUE )
+stm.tree.parse<-unlist(xpathApply(stm.tree, path="//p", fun=xmlValue))
+n<-(which(!is.na(str_locate(stm.tree.parse, "release")))+1)[1]
+l<-length(stm.tree.parse)-1
+
+# Condense separate paragraphs into one element per statement date
+
+reports$statement.content[i]<-paste(stm.tree.parse[n:l], collapse = "")
+
+# Remove line breaks
+
+reports$statement.content[i]<-gsub("\r?\n|\r"," ",reports$statement.content[i])
+#reports$statement.content[i]<-gsub("\\.+\\;+\\,+","",reports$statement.content[i])
+
+# Count number of characters per statement
+
+reports$statement.length[i]<-nchar(reports$statement.content[i])
+#reports$statement.length[i]<-wordcount(reports$statement.content[i], sep = " ", count.function = sum)
+}
+
+```
+
+
+```{r}
+# Create R data object
+
+saveRDS(reports, file = "fomc_data.rds")
+
+```
+
+### Data cleansing - correct a statement date
+
+```{r}
+
+# Correct the date for one statement, because the URL is not in sync with the actual date inside the statement content
+
+reports$statement.dates[match(c("20070618"),reports$statement.dates)]<-"20070628"
+```
+
+
+### Section 4.1
+### Analyse FOMC statement word lengths and word frequency 
+
+```{r}
+# Compute total statement length per year by aggregating across individual statements
+
+yearly.length<-reports%>% group_by(year) %>% summarize(words.per.year=sum(statement.length))
+yearly.length
+
+```
+As can be seen, the total statement length was the highest for the year 2014. As expected, the count for 2019 is low because the year is still in progress and there have been only 3 meetings so far this year.
+
+
+```{r}
+# Graph the total statement length per year
+
+ggplot(yearly.length, aes(x=yearly.length$year,y=yearly.length$words.per.year))+geom_bar(stat="identity",fill="darkblue", colour="black") + coord_flip()+xlab("Year")+ylab("Statement Length")
+```
+
+
+
+
+```{r}
+#Verify word count for a sample word in a sample statement
+
+sample<-reports%>%filter(reports$statement.dates=="20140319")
+sample[,4]
+str_count(sample, pattern="inflation")
+```
+
+
+### Trend in Statement Length by year and Fed Chair
+It seems that the FOMC statements became progressively verbose under Chairman Bernanke until they reached a peak in 2014 when Janet Yellen took over as the Fed Chair. This can be attributed to the fact that during 2014, there was a lot of discussion around when the Fed would end the quantitative easing measures that it had put in place to combat the recession that ensued from the financial crisis. There were 2 schools of thought - one which felt that the time was right for the Fed to start trimming its large balance sheet and the other that wanted to wait a bit longer to see more definite signs of growth before starting to reverse the quantitative easing measures. So the Fed tried to provide more transparency into their thinking which resulted in longer FOMC statments.
+
+Since 2014, the statements have gotten shorter. The current chairman Jerome Powell took over in February 2018.
+
+```{r}
+
+# Graph the annual trend in statement length, annotated by Fed Chair
+
+p<-ggplot(reports, aes(x=year,y=statement.length))+geom_point(stat="identity",color=statement.dates)+scale_fill_brewer(palette="Pastel1")+theme(legend.position="right")+xlab("Year") + ylab("Length of Statement")
+
+p + ggplot2::annotate("text", x = 4,y = 5000, label = "Bernanke", family="serif", fontface="bold", colour="blue", size=4)+ggplot2::annotate("text", x=10, y=5500, label="Yellen", family="serif", fontface="bold", colour="darkred",size=4)+ggplot2::annotate("text", x=13, y=3600, label="Powell", family="serif", fontface="bold", colour="black",size=4)+ggplot2::annotate("segment", x = 0, xend = 8.1, y = 2700, yend = 6500, colour = "blue", size=1, arrow=arrow(ends="both"))+ggplot2::annotate("segment", x = 8.1, xend = 12.1, y = 6500, yend = 3200, colour = "darkred", size=1, arrow=arrow(ends="both"))+ggplot2::annotate("segment", x = 12.1, xend = 14, y = 3200, yend = 3200, colour = "black", size=1, arrow=arrow(ends="both"))
+  
+```
+
+
+### Adding custom words and names to the list of stop words
+
+Remove proper nouns and irrelevant words from further analysis by adding them as custom words to the stop words lexicon
+
+```{r}
+
+# Add custom words to the stop words list to exclude proper nouns/names and words such as "committee" which would provide no meangingful insight into the statement's sentiment analysis
+
+#print(stop_words)
+words<-c("committee", "ben", "geithner", "bernanke", "timothy", "hoenig", "thomas", "donald", "kevin", "mishkin", "kroszner", "kohn", "charles", "frederic")
+lexicon<-c("Custom")
+my.stop_words<-data.frame(words, lexicon)
+colnames(my.stop_words)<-c("word","lexicon")
+new.stop_words <- rbind(my.stop_words, stop_words)
+new.stop_words$word<-as.character(new.stop_words$word)
+new.stop_words$lexicon<-as.character(new.stop_words$lexicon)
+head(new.stop_words)
+```
+
+### Cleanse data - remove irrelevant characters and calculate the frequency of the main words per statement date
+
+```{r}
+# Strip out punctuations, white space and custom stop words, and calculate the word frequency by statement date
+
+report.words<-reports %>%mutate(date = statement.dates, year = year, text= statement.content) %>% unnest(text) %>% unnest_tokens(word, text) %>%mutate(word = stripWhitespace(gsub("[^A-Za-z ]"," ",word))) %>% filter(word != "") %>% filter(word != " ") %>%anti_join(new.stop_words)%>% count(date, year, word, sort = TRUE)%>% mutate(frequency = n) %>% select(date, year, word, frequency)
+```
+
+### Verify if the count is correct for a given combination of sample word and statement
+
+```{r}
+# Verify the count for the word "inflation" during the statements published in 2007 
+
+report.words%>%filter(year=='2007', word=='inflation')
+```
+
+
+```{r }
+
+# Rank most frequent words by year
+
+f_text<-report.words%>% group_by(year,word) %>% summarize(total=sum(frequency))%>%arrange(year,desc(total),word)%>% mutate(rank=row_number())%>%ungroup() %>% arrange(rank,year)
+
+# Select the top 10 ranked words per year
+
+topWords <- f_text %>% filter(rank<11)%>%arrange(year,rank)
+print(topWords)
+
+```
+
+### Graph the most frequent words per year
+
+```{r fig.width = 15, fig.asp = 0.95}
+
+# Graph top 10 most frequent words by year
+
+gg <- ggplot(head(topWords, 130), aes(y=total,x=reorder(word,rank))) + geom_col(fill="#27408b") +
+  facet_wrap(~year,scales="free", ncol=3)+ coord_flip()+theme_ridges(font_size=11) + 
+  labs(x="",y="",title="Most Frequent Words in FOMC Statements grouped by years (2007 - 2019)")
+
+gg
+```
+
+### Conclusion
+
+As can be seen from the above analysis, the type of words that show up in the top 10 list are largely the same. This is because in almost all cases, the FOMC statements start by making a reference to the previous statement and refer to the common economic parameters that the committee tracks. So there is large amount of consistency in how the statements are worded and the type of terms they employ. There is no surprise in the most frequently used words in these statements. In fact, one could argue that it is the differential i.e. the new words which are likely to be the least frequently words in the statements that provide the real information needed for sentiment analysis.
+
+On account of this, we do not pursue this path further, and change track to other approaches to do our analysis.
+

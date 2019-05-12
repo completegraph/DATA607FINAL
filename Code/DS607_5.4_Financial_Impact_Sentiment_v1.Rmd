@@ -1,0 +1,171 @@
+---
+title: "Section 5.4 Financial Impact of Sentiment"
+author: "Alexander Ng"
+date: "5/11/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(kableExtra)
+library(knitr)
+```
+
+## Sentiment and Equity Markets
+
+In this section, we evaluate the relationship how our sentiment index compares to a broad US equity index (the Russell 1000 Index).   This section will examine the fluctuations of the sentiment compared to the equity market in two ways: through a visual analysis of the normalized levels of both variables and a linear regression of the time series data.
+To accomplish this, we first merge 3 data sets aligned by the 102 FOMC meeting dates.  To calculate normalized versions of the variables, we calculate Z-scores of both variables over the sample period.   Lastly, we perform both analyses using the Z-score data.
+
+
+```{r}
+
+# First load all 3 files into data frames.
+# ------------------------------------------------------
+mgData<-readRDS(file = "fomc_merged_data_v2.rds")
+sData <- readRDS( file = "../DATA/SentimentDF.rds")
+file_fred_ru1000tr = "../DATA/FRED_RU1000TR.csv"
+
+ru1000tr = read_csv(file_fred_ru1000tr, 
+                    col_types = cols(DATE=col_character(), 
+                                     RU1000TR = col_double() ) )
+
+# Generate a lubridate date column to join with the FOMC data.
+# -----------------------------------------------------------------
+ru1000tr %>% mutate( date_mdy = lubridate::ymd( DATE ) )-> ruData
+
+ #z_ru_daily = (RU1000TR - mean(RU1000TR, na.rm=TRUE))/sd(RU1000TR, na.rm = TRUE )
+
+#  Second, join the data:
+#  Since this is a 2-way inner join, we start with the FOMC statement data
+#  and join it to the sentiment data by date string (yyyymmdd)
+# -------------------------------------------------------------------------
+mgData %>% inner_join(sData, by = c( "statement.dates" = "FOMC_Date")) -> msData
+
+#  Join the sentiment-FOMC data to the Russell 1000 Index data from FRED
+#  Make sure to add a Z-score for each of the time series: sentiment and Rusell index values
+#     Save the raw data and normalized data by FOMC data.
+# ----------------------------------------------------------------------------------
+msEQdata = msData %>% left_join(ruData, by = c("date_mdy" = "date_mdy") ) %>% 
+                    select( date_mdy, Sentiment_Score, RU1000TR ) %>%
+                    mutate( z_ru_fomc = (RU1000TR - mean(RU1000TR, na.rm = TRUE) ) / sd( RU1000TR, na.rm=TRUE ) ,
+                            z_sentiment = ( Sentiment_Score - mean( Sentiment_Score, na.rm = TRUE) ) / 
+                              sd( Sentiment_Score, na.rm=TRUE) )
+```
+
+
+### Data Transformation:  Scale and Frequency Domain Issues
+
+Let's inspect the data for accuracy and scaling issues.   Exploratory data analysis shows 3 issues.  
+
+* Normalization to z-score format is needed to ensure that scale is not a problem.   Since the Russell Index level are expressed in the thousands, while the sentiment is on expressed in units of 0.01, scaling is essential along the y-dimension.  To solve the scale problem, we convert the entire sample to Z-score equivalent which bring both time series to the same order of magnitude and mean. 
+
+* There is also a need to normalize in the frequency domain.   FOMC meetings occur 8 times per year so their sentiment levels and changes reflect nearly 2 months of news.   Russell equity index levels are collected on a daily basis in order to ensure completeness of the data collection.  The volatility of lower frequency data is much greater in absolute terms than volatility of higher frequency (daily) data.  To address this, we only calculate Z-scores of the Russell equity index levels observed **only** on the FOMC dates. 
+
+* Lastly, Russell Index levels increases at a geometric rate (roughly).  Thus, values at the start of the sample period are smaller than values at the end of the period.   The residuals in a regression of such data show significant increase volatility over the sample period.   This is solved by apply a logarithmic transformation to Russell Index levels.   This change fixes the non-constant residual volatility and also improves the model fit from 36 to 39 percent adjusted R-squared roughly.
+
+
+The following code produces the log-transformed z-scores of FOMC periodic equity values.
+
+```{r eval=TRUE}
+
+
+msEQdata %>% mutate( logEquity = log(RU1000TR) ) %>%
+             mutate( z_logEquity = ( logEquity - mean(logEquity) )/ sd( logEquity ) ) -> msEQdata
+  
+
+msEQdata %>%  kable() %>% scroll_box(width="100%", height="200px")
+```
+
+### Charting the Time Series Alternatives
+
+In this section, we will show 3 time series charts illustrating the alternative considerations of regression modeling.
+
+The first chart below shows the raw sentiment compared to raw Russell equity levels.  Scale issues are obvious since the sentiment values are compressed to the appearance of a slightly fuzzy flat line.  The chart below shows scaling is essential.
+
+```{r}
+
+ggplot() + 
+  geom_line(data=msEQdata, aes(x=date_mdy, y=Sentiment_Score) , color = "red" ) +
+  geom_line(data=msEQdata, aes(x=date_mdy, y=RU1000TR), color="green") +
+  ggtitle("Sentiment vs. Russell 1000 Equity Level", subtitle="Not usable without fixes")
+  
+```
+
+The second chart shows the use of scaled sentiment versus scaled Russell equity levels.  Scale issues are remain because the right hand side (the more recent years) shows higher variation than the left hand side (earliest years).
+
+```{r}
+ggplot() + 
+  geom_line(data=msEQdata, aes(x=date_mdy, y=z_sentiment) , color = "red" ) +
+  geom_line(data=msEQdata, aes(x=date_mdy, y=z_ru_fomc), color="green") +
+  ggtitle("Scaled Sentiment vs. Scaled Equity Index", subtitle = "Nearly There...")
+```
+
+Finally, the third chart shows the variables we will use in the regression analysis.
+
+```{r, eval=TRUE}
+
+ggplot() + 
+  geom_line(data=msEQdata, aes(x=date_mdy, y=z_sentiment) , color = "red" ) +
+  geom_line(data=msEQdata, aes(x=date_mdy, y=z_logEquity), color="green") +
+  ggtitle("Scaled-Sentiment vs. Scaled Log Equity Price", subtitle="What we will use")
+```
+
+### Regressing Sentiment to Financial Variables
+
+The final regression model we present uses the scaled, log-transformed data with the removal of an influential outlier (observation 1 of Jan 2007).   For a reason yet to be determined, Jan 2007 generates the highest sentiment of the entire observation period.  This is arguably wrong as the Sept 2018 period was possibly the most euphoric in recent memory.  It is calculated in the code chunk below.
+
+
+```{r}
+mod1 = lm( z_logEquity ~ z_sentiment, data=msEQdata[2:102,])
+
+summary(mod1)
+```
+The mod1 clearly has a statistically significant leading coefficient because the p-value is 6.19e-12.
+The adjusted-R-squared of 37 percent suggests the model has some explanatory power.
+
+Examining the diagnostic plots below shows:
+* Q-Q plot and histogram of residuals show reasonable approximation to normality.
+* residuals have relatively homogenous variance across the range of observations
+* residuals have little trend in relative to the fitted values
+* leverage plot has controlled for most influential outlier (observation 1)
+
+```{r}
+par(mfrow=c(3,2))
+plot(mod1)
+hist(mod1$residuals )
+
+```
+
+Finally, we present the scatterplot of regressed values overlay with the regression line to study the model fit.
+
+```{r}
+ggplot(data=msEQdata[2:102,], aes(x=z_sentiment, y=z_logEquity) ) + 
+   geom_point() + 
+   geom_smooth(method=lm) +
+   ggtitle("ScatterPlot of Fitted Regression Model", subtitle="X=Z-Sentiment, Y=Z-LogRussell 1000 (2007-2019)")
+
+
+```
+
+### Discussion of Results
+
+There are two comments related to the time series and regression we should make.
+
+First, the time series of sentiment clearly shows a pattern characteristic of other financial variables through the 2007-2019 period.  During the Q4 2008, at the depths of the financial crisis, sentiment appears to be at a low.
+During H2 2009, when the financial markets had miraculously recovered, the sentiment spikes upward.  Other signs that sentiment is effective include the 2018 euphoria when equity markets reached daily highs during the summer and fall.
+Moreover, sentiment in Q4 2018 and Q1 2019 declined in concert with the observed selloff of risk assets in the same period.
+
+However, the sentiment index is imperfect.   The 2013 taper tantrum is not reflected correctly from a bond investor point of view.  As we recall, on May 22, 2013, bond markets panicked when Bernanke gave a speech to Congress that quantitative easing would likely be terminated at a future date.   More investigation is needed to understand the market and FOMC dynamics around that historical episode and we regard this as future work.
+
+Second, the regressions suggests that sentiment is positively associated with equity levels.  Positive sentiment is associated with higher Russell Index 1000 levels.  We think this makes sense.  Whether sentiment causes equity markets to move or vice versa is too complex to answer with the crude econometric analysis we have conducted.  However, the trend and regression results suggest that more detailed regression analysis of sentiment difference vs. equity returns (instead of levels) both contemporaneous or lagged would promising some predictive value from sentiment analysis.   The project timeline did not allow for this more extensive regression analysis work, but we view it as fertile ground for future research.
+
+
+
+
