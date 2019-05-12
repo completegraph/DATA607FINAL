@@ -435,9 +435,10 @@ names(results)[names(results) == "modelling"] <- "modelling(Train : Test)"
 results
 ```
 
-For some of the variables, extra fine-tuning of the data was not needed to achieve appreciable accuracy. But for the `Economic.Growth` we needed to adjust the ratio of training set to test data set to 58:42 to achieve an accuracy of 79.10%. For the `Inflation` we had to adjust sparsity at 0.94, removed 13 unuseful columns, adjusted the ratio of training to test data sets to 70:30 before we could achieve an accuracy of 64.52%
 
-We can conclude that these values obtained, though not completely accurate, did go a long way to depict the nature of the economy based on the variables considered within the selected years. There are much room left for improvements and further analysis but we cannot go beyond this level right now as time will not permit us
+For some of the variables, extra fine-tuning of the data was not needed to achieve appreciable accuracy. But for the `Economic.Growth` variable, we needed to adjust the ratio of training set to test data set to `58:42` to achieve an accuracy of `79.10%`. For the `Inflation` variable we had to adjust sparsity to `0.94`, removed 13 unuseful columns, adjusted the ratio of training to test data sets to `70:30` before we could achieve an accuracy of `64.52%`
+
+We can conclude that these values obtained, though not perfect, did go a long way to align with the human based scoring/classification of the economy trends based on the variables considered within the selected years. There are much room left for improvements and further analysis but we cannot go beyond this level right now as time will not permit us
 
 
 
