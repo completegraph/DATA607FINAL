@@ -197,12 +197,14 @@ $(document).ready(function () {
 </div>
 
 
-<div id="textual-classifications" class="section level1">
-<h1>Textual Classifications</h1>
-<p>The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement</p>
-<div id="read-the-data" class="section level2">
-<h2>Read the data</h2>
+<p>5.1 Text Classifications</p>
+<div id="the-manual-scores-of-the-fomc-statements-are-leaveraged-as-a-rich-source-of-reference-point-for-validating-automated-classifcations.-we-hope-that-this-can-serve-as-a-good-basis-for-future-researches-and-there-a-lot-of-rooms-for-improvement.-the-variables-classiffied-are-not-all-binary.-some-are-multi-classed-have-more-than-teo-classes-while-only-one-medium.term.rate-is-binary" class="section level5">
+<h5>The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than teo classes) while only one (<code>Medium.Term.Rate</code>) is binary</h5>
+</div>
+<div id="read-the-data" class="section level5">
+<h5>Read the data</h5>
 <pre class="r"><code>fomc_data &lt;-readRDS(file = &quot;fomc_merged_data_v2.rds&quot;)</code></pre>
+</div>
 <div id="inspect-selected-variables" class="section level5">
 <h5>inspect selected variables</h5>
 <pre class="r"><code>head(select(fomc_data, Index,year,statement.dates,statement.length,date_mdy,Employment.Growth,Economic.Growth,Inflation,Medium.Term.Rate,Policy.Rate))</code></pre>
@@ -221,6 +223,8 @@ $(document).ready(function () {
 ## 5              Up      Flat             Hawk        Flat
 ## 6            Down      Flat             Dove        Flat</code></pre>
 </div>
+<div id="data-preparation" class="section level4">
+<h4>Data preparation</h4>
 <div id="first-randomising-the-rows-so-that-the-statements-from-different-eras-of-the-economic-movements-can-be-well-represented" class="section level5">
 <h5>First, randomising the rows so that the statements from different eras of the economic movements can be well represented</h5>
 <pre class="r"><code>set.seed(1234567)
@@ -234,11 +238,8 @@ fomc_Rand &lt;- fomc_data[sample(nrow(fomc_data)),]</code></pre>
 
 fomc_dataX$statement.content &lt;- str_replace_all(fomc_dataX$statement.content, customStopWords, &quot;&quot;)</code></pre>
 </div>
-</div>
-<div id="data-preparation" class="section level2">
-<h2>Data Preparation</h2>
-<div id="prepare-the-data-to-so-that-it-can-be-reused-for-all-the-classifications" class="section level5">
-<h5>Prepare the data to so that it can be reused for all the classifications</h5>
+<div id="data-preparation-here-we-prepare-the-data-so-that-it-can-be-reused-for-all-the-classifications-without-the-need-to-repeat-the-leaning-and-preparation-processes-gaain" class="section level5">
+<h5>Data Preparation: Here, we prepare the data so that it can be reused for all the classifications without the need to repeat the leaning and preparation processes gaain</h5>
 <pre class="r"><code># form a corpus
 corpus &lt;- VCorpus(VectorSource(fomc_dataX$statement.content))
 
@@ -270,10 +271,14 @@ corpusX &lt;- removeSparseTerms(dtm, 0.95)
 data_matrix &lt;- as.matrix(corpusX)</code></pre>
 </div>
 </div>
-<div id="classifications" class="section level2 tabset tabset-fade tabset-pills">
-<h2>Classifications</h2>
-<div id="the-medium.term.rate-variable" class="section level3">
-<h3>The <code>Medium.Term.Rate</code> variable</h3>
+<div id="classifications" class="section level4">
+<h4>Classifications</h4>
+<div id="from-here-were-are-going-to-perform-classifications-based-on-medium.term.rate-employment.growth-economic.growth-inflation-medium.term.rate-and-policy.rate-variables" class="section level5">
+<h5>From here, were are going to perform classifications based on <code>Medium.Term.Rate</code>, <code>Employment.Growth</code>, <code>Economic.Growth</code>, <code>Inflation</code>, <code>Medium.Term.Rate</code>, and <code>Policy.Rate</code> variables</h5>
+<p>5.1.1 <code>Medium.Term.Rate</code></p>
+</div>
+<div id="classification-targetting-the-medium.term.rate-variable" class="section level5">
+<h5>Classification targetting the <code>Medium.Term.Rate</code> variable</h5>
 <pre class="r"><code>mRate &lt;- data_matrix
 
 # attach the 'medium.term.rate' column
@@ -287,6 +292,9 @@ mRateData &lt;- as.data.frame(mRate_matrix)
 
 # convert 'tone' to lower case and make it a factor column as well
 mRateData$tone &lt;- as.factor(tolower(mRateData$tone))</code></pre>
+</div>
+<div id="partition-the-data-into-training-and-test-sets" class="section level5">
+<h5>Partition the data into training and test sets</h5>
 <pre class="r"><code>mRate_n &lt;- nrow(mRateData)
 mRateTrainVolume &lt;- round(mRate_n * 0.80)
 
@@ -325,9 +333,10 @@ mRateTest &lt;- mRateData[-mRateTrainIndex,]</code></pre>
 ##                                      
 ##        'Positive' Class : dove       
 ## </code></pre>
+<p>5.1.2 <code>Economic.Growth</code></p>
 </div>
-<div id="the-economic.growth-variable" class="section level3">
-<h3>The <code>Economic.Growth</code> variable</h3>
+<div id="classification-targeting-the-economic.growth-variable" class="section level5">
+<h5>Classification targeting the <code>Economic.Growth</code> variable</h5>
 <pre class="r"><code>econGrowth &lt;- data_matrix
 
 # attach the 'Economic.Growth' column
@@ -341,6 +350,9 @@ econData &lt;- as.data.frame(econG_matrix)
 
 # convert 'growth' to a factor column as well
 econData$egrowth &lt;- as.factor(econData$egrowth)</code></pre>
+</div>
+<div id="partition-the-data-into-training-and-test-sets-note-that-the-ratios-here-are-different-from-the-other-models" class="section level5">
+<h5>Partition the data into training and test sets: note that the ratios here are different from the other models</h5>
 <pre class="r"><code>econ_n &lt;- nrow(econData)
 econTrainVolume &lt;- round(econ_n * 0.58)
 
@@ -382,6 +394,7 @@ econTest &lt;- econData[-econTrainIndex,]</code></pre>
 ## Detection Rate            0.1395     0.09302    0.5581
 ## Detection Prevalence      0.1628     0.09302    0.7442
 ## Balanced Accuracy         0.7848     0.75000    0.7578</code></pre>
+</div>
 </div>
 <div id="the-inflation-variable" class="section level3">
 <h3>The <code>Inflation</code> variable</h3>
@@ -511,8 +524,8 @@ empTest &lt;- empData[-empTrainIndex,]</code></pre>
 ## Detection Prevalence      0.2500      0.2000    0.5500
 ## Balanced Accuracy         0.9688      0.9000    0.8990</code></pre>
 </div>
-<div id="the-policy.rate-variable" class="section level3">
-<h3>The <code>Policy.Rate</code> variable</h3>
+<div id="policy.rate" class="section level3">
+<h3>Policy.Rate</h3>
 <pre class="r"><code>plRate &lt;- data_matrix
 
 # attach the 'Policy.Rate' column
@@ -569,10 +582,25 @@ plTest &lt;- plData[-empTrainIndex,]</code></pre>
 ## Detection Prevalence      0.7500         0.25         0.00
 ## Balanced Accuracy         0.9167         1.00         0.50</code></pre>
 </div>
-</div>
-<div id="conclusions" class="section level2">
-<h2>Conclusions</h2>
-</div>
+<div id="summary-and-conclusion" class="section level2">
+<h2>Summary and Conclusion</h2>
+<p>Table of summary</p>
+<pre class="r"><code>results &lt;- tibble(variable = c(&quot;Medium.Term.Rate&quot;,&quot;Employment.Growth&quot;,&quot;Economic.Growth&quot;,&quot;Inflation&quot;,&quot;Policy.Rate&quot;), modelling = c(&quot;80 : 20&quot;, &quot;80 : 20&quot;, &quot;58 : 42&quot;, &quot;70 : 30&quot;, &quot;80 : 20&quot;), accuracy= c(100, 90, 79.1, 64.52, 95)) 
+
+names(results)[names(results) == &quot;accuracy&quot;] &lt;- &quot;accuracy(%)&quot;
+names(results)[names(results) == &quot;modelling&quot;] &lt;- &quot;modelling(Train : Test)&quot;
+
+results</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##   variable          `modelling(Train : Test)` `accuracy(%)`
+##   &lt;chr&gt;             &lt;chr&gt;                             &lt;dbl&gt;
+## 1 Medium.Term.Rate  80 : 20                           100  
+## 2 Employment.Growth 80 : 20                            90  
+## 3 Economic.Growth   58 : 42                            79.1
+## 4 Inflation         70 : 30                            64.5
+## 5 Policy.Rate       80 : 20                            95</code></pre>
+<p>For some of the variables, extra fine-tuning of the data was not needed to achieve appreciable accuracy. But for the <code>Economic.Growth</code> we needed to adjust the ratio of training set to test data set to 58:42 to achieve an accuracy of 79.10%. For the <code>Inflation</code> we had to adjust sparsity at 0.94, removed 13 unuseful columns, adjusted the ratio of training to test data sets to 70:30 before we could achieve an accuracy of 64.52%</p>
+<p>We can conclude that these values obtained, though not completely accurate, did go a long way to depict the nature of the economy based on the variables considered within the selected years. There are much room left for improvements and further analysis but we cannot go beyond this level right now as time will not permit us</p>
 </div>
 
 
