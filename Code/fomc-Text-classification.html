@@ -197,7 +197,14 @@ $(document).ready(function () {
 </div>
 
 
+<div id="textual-classifications" class="section level1">
+<h1>Textual Classifications</h1>
+<p>The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement</p>
+<div id="read-the-data" class="section level2">
+<h2>Read the data</h2>
 <pre class="r"><code>fomc_data &lt;-readRDS(file = &quot;fomc_merged_data_v2.rds&quot;)</code></pre>
+<div id="inspect-selected-variables" class="section level5">
+<h5>inspect selected variables</h5>
 <pre class="r"><code>head(select(fomc_data, Index,year,statement.dates,statement.length,date_mdy,Employment.Growth,Economic.Growth,Inflation,Medium.Term.Rate,Policy.Rate))</code></pre>
 <pre><code>##   Index year statement.dates statement.length   date_mdy Employment.Growth
 ## 1     1 2007        20070131              181 2007-01-31              Flat
@@ -213,20 +220,25 @@ $(document).ready(function () {
 ## 4              Up      Down             Hawk        Flat
 ## 5              Up      Flat             Hawk        Flat
 ## 6            Down      Flat             Dove        Flat</code></pre>
-<div id="first-randomising-the-rows-so-that-the-statements-from-different-eras-of-the-economic-movements-can-be-well-represented" class="section level4">
-<h4>First, randomising the rows so that the statements from different eras of the economic movements can be well represented</h4>
+</div>
+<div id="first-randomising-the-rows-so-that-the-statements-from-different-eras-of-the-economic-movements-can-be-well-represented" class="section level5">
+<h5>First, randomising the rows so that the statements from different eras of the economic movements can be well represented</h5>
 <pre class="r"><code>set.seed(1234567)
 
 fomc_Rand &lt;- fomc_data[sample(nrow(fomc_data)),]</code></pre>
-<div id="convert-the-statements-textual-contents-to-lower-and-remove-the-federal-open-market-committee-as-it-is-present-in-all-the-statements" class="section level5">
-<h5>convert the statements’ textual contents to lower and remove <code>the federal open market committee</code> as it is present in all the statements</h5>
+</div>
+<div id="preliminary-data-cleansing-convert-the-statements-textual-contents-to-lower-and-remove-the-federal-open-market-committee-and-committee-as-it-is-present-in-all-the-statements" class="section level5">
+<h5>Preliminary data cleansing: convert the statements’ textual contents to lower and remove <code>the federal open market committee</code> and <code>committee</code> as it is present in all the statements</h5>
 <pre class="r"><code>customStopWords &lt;- c(&quot;the federal open market committee&quot;, &quot;committee&quot;)</code></pre>
 <pre class="r"><code>fomc_dataX &lt;- fomc_Rand %&gt;% mutate(statement.content = tolower(statement.content))
 
 fomc_dataX$statement.content &lt;- str_replace_all(fomc_dataX$statement.content, customStopWords, &quot;&quot;)</code></pre>
 </div>
-<div id="prepare-the-data-to-serve-for-all-the-classification" class="section level5">
-<h5>Prepare the data to serve for all the classification</h5>
+</div>
+<div id="data-preparation" class="section level2">
+<h2>Data Preparation</h2>
+<div id="prepare-the-data-to-so-that-it-can-be-reused-for-all-the-classifications" class="section level5">
+<h5>Prepare the data to so that it can be reused for all the classifications</h5>
 <pre class="r"><code># form a corpus
 corpus &lt;- VCorpus(VectorSource(fomc_dataX$statement.content))
 
@@ -258,8 +270,10 @@ corpusX &lt;- removeSparseTerms(dtm, 0.95)
 data_matrix &lt;- as.matrix(corpusX)</code></pre>
 </div>
 </div>
-<div id="the-medium.term.rate-variable" class="section level4">
-<h4>The <code>Medium.Term.Rate</code> variable</h4>
+<div id="classifications" class="section level2 tabset tabset-fade tabset-pills">
+<h2>Classifications</h2>
+<div id="the-medium.term.rate-variable" class="section level3">
+<h3>The <code>Medium.Term.Rate</code> variable</h3>
 <pre class="r"><code>mRate &lt;- data_matrix
 
 # attach the 'medium.term.rate' column
@@ -273,9 +287,6 @@ mRateData &lt;- as.data.frame(mRate_matrix)
 
 # convert 'tone' to lower case and make it a factor column as well
 mRateData$tone &lt;- as.factor(tolower(mRateData$tone))</code></pre>
-<pre class="r"><code>head(mRateData[,ncol(mRateData)])</code></pre>
-<pre><code>## [1] dove dove hawk hawk dove dove
-## Levels: dove hawk</code></pre>
 <pre class="r"><code>mRate_n &lt;- nrow(mRateData)
 mRateTrainVolume &lt;- round(mRate_n * 0.80)
 
@@ -315,8 +326,8 @@ mRateTest &lt;- mRateData[-mRateTrainIndex,]</code></pre>
 ##        'Positive' Class : dove       
 ## </code></pre>
 </div>
-<div id="the-economic.growth-variable" class="section level4">
-<h4>The <code>Economic.Growth</code> variable</h4>
+<div id="the-economic.growth-variable" class="section level3">
+<h3>The <code>Economic.Growth</code> variable</h3>
 <pre class="r"><code>econGrowth &lt;- data_matrix
 
 # attach the 'Economic.Growth' column
@@ -331,7 +342,7 @@ econData &lt;- as.data.frame(econG_matrix)
 # convert 'growth' to a factor column as well
 econData$egrowth &lt;- as.factor(econData$egrowth)</code></pre>
 <pre class="r"><code>econ_n &lt;- nrow(econData)
-econTrainVolume &lt;- round(econ_n * 0.80)
+econTrainVolume &lt;- round(econ_n * 0.58)
 
 set.seed(314)
 
@@ -340,40 +351,40 @@ econTrain &lt;- econData[econTrainIndex,]
 econTest &lt;- econData[-econTrainIndex,]</code></pre>
 <pre class="r"><code>econModel &lt;- train(egrowth ~., data = econTrain, method = 'svmLinear3')</code></pre>
 <pre class="r"><code>econResult &lt;- predict(econModel, newdata = econTest)</code></pre>
-<pre class="r"><code>( econStats = confusionMatrix( econResult, econTest$egrowth))</code></pre>
+<pre class="r"><code>(econStats = confusionMatrix( econResult, econTest$egrowth))</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction down flat up
-##       down    4    1  0
-##       flat    0    2  0
-##       up      3    1  9
+##       down    6    0  1
+##       flat    0    4  0
+##       up      4    4 24
 ## 
 ## Overall Statistics
-##                                          
-##                Accuracy : 0.75           
-##                  95% CI : (0.509, 0.9134)
-##     No Information Rate : 0.45           
-##     P-Value [Acc &gt; NIR] : 0.006434       
-##                                          
-##                   Kappa : 0.5833         
-##                                          
-##  Mcnemar's Test P-Value : 0.171797       
+##                                           
+##                Accuracy : 0.7907          
+##                  95% CI : (0.6396, 0.8996)
+##     No Information Rate : 0.5814          
+##     P-Value [Acc &gt; NIR] : 0.003287        
+##                                           
+##                   Kappa : 0.5913          
+##                                           
+##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: down Class: flat Class: up
-## Sensitivity               0.5714      0.5000    1.0000
-## Specificity               0.9231      1.0000    0.6364
-## Pos Pred Value            0.8000      1.0000    0.6923
-## Neg Pred Value            0.8000      0.8889    1.0000
-## Prevalence                0.3500      0.2000    0.4500
-## Detection Rate            0.2000      0.1000    0.4500
-## Detection Prevalence      0.2500      0.1000    0.6500
-## Balanced Accuracy         0.7473      0.7500    0.8182</code></pre>
+## Sensitivity               0.6000     0.50000    0.9600
+## Specificity               0.9697     1.00000    0.5556
+## Pos Pred Value            0.8571     1.00000    0.7500
+## Neg Pred Value            0.8889     0.89744    0.9091
+## Prevalence                0.2326     0.18605    0.5814
+## Detection Rate            0.1395     0.09302    0.5581
+## Detection Prevalence      0.1628     0.09302    0.7442
+## Balanced Accuracy         0.7848     0.75000    0.7578</code></pre>
 </div>
-<div id="the-inflation-variable" class="section level4">
-<h4>The <code>Inflation</code> variable</h4>
+<div id="the-inflation-variable" class="section level3">
+<h3>The <code>Inflation</code> variable</h3>
 <pre class="r"><code># Create Document Term Matrix
 dtmI &lt;- DocumentTermMatrix(corpus)
 
@@ -399,7 +410,7 @@ inflationData &lt;- as.data.frame(inflation_matrix)
 inflationData$inflation &lt;- as.factor(inflationData$inflation)</code></pre>
 <div id="remove-columns-that-will-not-contribute-meaninfully-to-the-model-fitting" class="section level5">
 <h5>remove columns that will not contribute meaninfully to the model fitting</h5>
-<pre class="r"><code>infDataX &lt;- inflationData[, -which(names(inflationData) %in% c(&quot;although&quot;, &quot;william&quot;, &quot;william&quot;, &quot;richard&quot;, &quot;raphael&quot;, &quot;randal&quot;, &quot;san&quot;, &quot;sarah&quot;,&quot;sandra&quot;, &quot;togeth&quot;, &quot;timothi&quot; , &quot;also&quot;,&quot;balanceconsist&quot;,&quot;basispoint&quot;,&quot;committe&quot;,&quot;dudley&quot;,&quot;elizabeth&quot;,&quot;esther&quot;,&quot;fomc&quot;))]</code></pre>
+<pre class="r"><code>infDataX &lt;- inflationData[, -which(names(inflationData) %in% c(&quot;although&quot;, &quot;william&quot;, &quot;richard&quot;, &quot;raphael&quot;, &quot;randal&quot;, &quot;san&quot;, &quot;sarah&quot;,&quot;sandra&quot;, &quot;togeth&quot;, &quot;timothi&quot;,&quot;committe&quot;,&quot;dudley&quot;,&quot;esther&quot;))]</code></pre>
 <pre class="r"><code>inf_n &lt;- nrow(infDataX)
 infTrainVolume &lt;- round(inf_n * 0.70)
 
@@ -410,7 +421,7 @@ infTrain &lt;- infDataX[infTrainIndex,]
 infTest &lt;- infDataX[-infTrainIndex,]</code></pre>
 <pre class="r"><code>inflationModel &lt;- train(inflation ~., data = infTrain, method=&quot;svmLinear3&quot;)</code></pre>
 <pre class="r"><code>inflationResult &lt;- predict(inflationModel, newdata = infTest)</code></pre>
-<pre class="r"><code>( econStats = confusionMatrix( inflationResult, infTest$inflation))</code></pre>
+<pre class="r"><code>( infStats = confusionMatrix( inflationResult, infTest$inflation))</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -443,8 +454,8 @@ infTest &lt;- infDataX[-infTrainIndex,]</code></pre>
 ## Balanced Accuracy         0.7478      0.7071   0.79762</code></pre>
 </div>
 </div>
-<div id="the-employment.growth-variable" class="section level4">
-<h4>The <code>Employment.Growth</code> variable</h4>
+<div id="the-employment.growth-variable" class="section level3">
+<h3>The <code>Employment.Growth</code> variable</h3>
 <pre class="r"><code>empGrowth &lt;- data_matrix
 
 # attach the 'Employment.Growth column
@@ -500,8 +511,8 @@ empTest &lt;- empData[-empTrainIndex,]</code></pre>
 ## Detection Prevalence      0.2500      0.2000    0.5500
 ## Balanced Accuracy         0.9688      0.9000    0.8990</code></pre>
 </div>
-<div id="the-policy.rate-variable" class="section level4">
-<h4>The <code>Policy.Rate</code> variable</h4>
+<div id="the-policy.rate-variable" class="section level3">
+<h3>The <code>Policy.Rate</code> variable</h3>
 <pre class="r"><code>plRate &lt;- data_matrix
 
 # attach the 'Policy.Rate' column
@@ -557,6 +568,11 @@ plTest &lt;- plData[-empTrainIndex,]</code></pre>
 ## Detection Rate            0.7000         0.25         0.00
 ## Detection Prevalence      0.7500         0.25         0.00
 ## Balanced Accuracy         0.9167         1.00         0.50</code></pre>
+</div>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+</div>
 </div>
 
 
