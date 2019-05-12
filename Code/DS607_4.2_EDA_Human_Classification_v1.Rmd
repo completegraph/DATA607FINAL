@@ -1,0 +1,94 @@
+---
+title: "Section 4.2 EDA Human Classification"
+author: "Alexander Ng"
+date: "5/11/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(lubridate)
+library(kableExtra)
+library(knitr)
+
+
+library(ggcorrplot) # Needed to plot the square matrix of cramerV values
+library(rcompanion) # Needed for cramerV function call.
+library(gridExtra) # for multiple plots
+```
+
+## Exploratory Data Analysis:  Human Classification
+
+We inspect the categorical data to check for distribution and  covariation patterns.
+
+
+```{r}
+mgData<-readRDS(file = "fomc_merged_data_v2.rds")
+
+```
+
+### Frequency Distributions of Each Attribute
+
+```{r}
+gEcon <- ggplot(data=mgData, aes(x=Economic.Growth, fill=Economic.Growth)) + 
+  geom_bar() + theme(legend.position = "none")
+
+gEmp  <- ggplot(data=mgData, aes(x=Employment.Growth, fill=Employment.Growth)) + 
+  geom_bar() +  theme(legend.position = "none")
+gInf  <- ggplot(data=mgData, aes(x=Inflation, fill=Inflation)) + 
+  geom_bar() + theme(legend.position = "none")
+gRate <- ggplot(data=mgData, aes(x=Medium.Term.Rate, fill=Medium.Term.Rate)) + 
+  geom_bar() + theme(legend.position = "none")
+gPolicy <- ggplot(data=mgData, aes(x=Policy.Rate, fill=Policy.Rate)) + 
+  geom_bar() + theme(legend.position = "none")
+
+grid.arrange(gEcon, gEmp, gInf, gRate, gPolicy, ncol=3, nrow=2 )
+
+```
+
+Inspecting the above charts, we infer some tendencies and align them to our understanding of the markets.
+
+* Economic.Growth is Up over 60% of the time.  This is consistent with the US economy have a positive growth rate over the last 200 years.  Since the long term trend is positive growth, the histogram is not a surprise.
+
+* Employment.Growth is Up over 52% of the time.  This is likewise consistent with US economy having positive employment and economic growth.
+
+* Inflation is down or flat for 80% of the time.  This is not consistent with the long term trend.  However, in the 2007-2019 period, inflation has been less than the long term trend. 
+
+* Dove is 80% of the time.   This is inconsistent with long term trend where Dove and Hawk are more balanced. It is consistent with the 2008-2015 period being part of a long recovery cycle.  
+
+* Policy rate is flat over 80% of the time.  This is consistent with the FOMC being a patient body that watches economic data and trends before acting.  Generally, the FOMC does not move rates at most meetings.  This is consistent with long term history.
+
+
+### Covariation of Attributes
+
+Now we attempt to measure the degree of covariation between the categorical attributes.  Although we would use a correlation matrix if the data was continuous and normally distributed, the categorical data defies such an approach.  Luckily, we can introduce a new type of statistical measure called **Cramer's V** which measures the degree of association between two categorical variables.   Its value can vary from 0 (no association) to 1 (perfectly associated).   Like correlation, Cramer's V is symmetric in the variables $x$ and $y$.  Now we will calculate and display this measure using the *rcompanion* package and *ggcorrplot** package.  A reference to this statistic may be found here:  [https://en.wikipedia.org/w/index.php?title=Cram%C3%A9r%27s_V&oldid=882900387]
+
+
+```{r}
+mgData %>% select(Economic.Growth:Policy.Rate) -> catData  # categorical data
+
+cv = matrix(rep(0,25), nrow=5, ncol=5)  # Allocate a 5x5 matrix of cramerV values initialized to 0.
+
+for(idx in 1:5){
+   for(jdx in 1:5){
+       cv[idx,jdx] = cramerV(catData[,idx], catData[,jdx])
+   }
+}
+
+rownames( cv ) = colnames(catData)
+colnames( cv ) = colnames(catData)
+
+ggcorrplot(cv, lab=TRUE, ggtheme = ggplot2::theme_classic(), colors=c("violet", "white", "lightgreen")) +
+  ggtitle("CramerV Matrix", subtitle="Classification Attributes Comparison")
+```
+
+None of the CramerV values are high suggesting limited dependence between all variables.
+The strongest association is between policy rate changes and medium term rate outlook at 0.44.   The surprising finding is that inflation is weakly associated with medium term rate outlook and policy rate changes.  One explanation suggests that inflation is not being strongly supervised by central bankers on the FOMC.  In this last business cycle, the key challenges have been financial crisis, significant unemployment and stagnant growth until the last 3 years.   Inflation has drifted sideways.
+
