@@ -1,0 +1,322 @@
+---
+title: "DS607_FOMC_Sentiment_Analysis"
+author: "Jagdish Chhabria"
+date: "April 29, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load required packages
+
+```{r download statements}
+library(rlang)
+library(pdftools)
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(tidyr)
+library(xlsx)
+library(RCurl)
+library(XML)
+library(kableExtra)
+library(tm)
+library(ngram)
+library(SentimentAnalysis)
+library(tidytext)
+#library(ggridges)
+library(wordcloud)
+library(ggplot2)
+```
+
+### Collate links to FOMC statements from January 2007 till date (May 2019)
+
+This is one of the primary sources of data. The URL for each FOMC statement from  January 2007 onwards is collated from the following website (https://www.federalreserve.gov/monetarypolicy). While historical statements are available from 1994 onwards, the choice of starting point i.e. January 2007 was made to strike a balance between quantity and quality (adequate representation through different periods of the economic cycle such as recession (2009) and growth (2018).
+
+There is a total of 102 statements published during this period.
+
+```{r}
+
+links<-c("https://www.federalreserve.gov/newsevents/pressreleases/monetary20190130a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20190320a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20190501a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180131a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180321a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180502a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180613a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180801a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20180926a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20181108a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20181219a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170201a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170315a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170503a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170614a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170726a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20170920a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20171101a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20171213a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160127a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160316a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160427a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160615a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160727a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20160921a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20161102a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20161214a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150128a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150318a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150429a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150617a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150729a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20150917a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20151028a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20151216a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140129a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140319a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140430a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140618a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140730a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20140917a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20141029a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20141217a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130130a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130320a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130501a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130619a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130731a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20130918a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20131030a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20131218a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120125a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120313a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120425a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120620a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120801a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20120913a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20121024a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20121212a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110126a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110315a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110427a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110622a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110809a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20110921a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20111102a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20111213a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100127a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100316a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100428a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100623a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100810a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20100921a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20101103a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20101214a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090128a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090318a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090429a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090624a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090812a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090923a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20091104a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20091216a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080122b.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080130a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080318a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080430a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080625a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080805a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20080916a.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20081008a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20081029a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20081216b.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070131a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070321a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070509a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070618a.htm", 
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070807a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070817b.htm",  
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20070918a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20071031a.htm",
+         "https://www.federalreserve.gov/newsevents/pressreleases/monetary20071211a.htm"
+         
+)
+
+length(links)
+
+
+```
+
+## Data Preparation
+
+```{r}
+
+# Extract year of publication from the statement's release date, and create a data frame with date, year and URL. 
+# Convert factors to characters
+
+statement.dates<-NULL
+year<-NULL
+for(i in seq(from=1, to=length(links))) {
+  statement.dates[i]<-(str_extract(links[i],"[[:digit:]]+"))
+  year[i]<-substr(statement.dates[i],1,4)
+}
+
+reports<-data.frame(year,statement.dates, links)
+reports %<>% mutate_if(is.factor, as.character)%>% arrange(statement.dates)
+
+```
+
+
+```{r}
+# Loop through the statement links and scrape the content
+# Discard irrelevant portions of the extracted content i.e. prelimary paragraphs and last paragraph
+
+
+statement.content<-NULL
+statement.length<-NULL
+for(i in seq(from=1, to=length(reports$links))) {
+stm.url<-getURL(reports$links[i])
+stm.tree<-htmlTreeParse(stm.url,useInternal=TRUE )
+stm.tree.parse<-unlist(xpathApply(stm.tree, path="//p", fun=xmlValue))
+n<-(which(!is.na(str_locate(stm.tree.parse, "release")))+1)[1]
+l<-length(stm.tree.parse)-1
+
+# Condense separate paragraphs into one element per statement date
+
+reports$statement.content[i]<-paste(stm.tree.parse[n:l], collapse = "")
+
+# Remove line breaks
+
+reports$statement.content[i]<-gsub("\r?\n|\r"," ",reports$statement.content[i])
+#reports$statement.content[i]<-gsub("\\.+\\;+\\,+","",reports$statement.content[i])
+
+# Count number of characters per statement
+
+reports$statement.length[i]<-nchar(reports$statement.content[i])
+#reports$statement.length[i]<-wordcount(reports$statement.content[i], sep = " ", count.function = sum)
+}
+
+
+```
+
+
+```{r}
+# Create R data object
+
+saveRDS(reports, file = "fomc_data.rds")
+
+```
+
+```{r}
+
+# View extracted content of a particular statement
+
+reports$statement.dates[match(c("20070618"),reports$statement.dates)]<-"20070628"
+```
+
+
+
+```{r}
+#print(reports$statement.content[2])
+#nchar(reports$statement.content[2])
+#print(reports$year)
+#length(reports$year)
+#print(reports$statement.length)
+#length(reports$statement.length)
+#print(reports$year, reports$statement.length, digits=1)
+#print(reports[1,])
+
+# Compute total statement length per year
+
+yearly.length<-reports%>% group_by(year) %>% summarize(words.per.year=sum(statement.length))
+yearly.length
+
+```
+
+
+
+```{r}
+# Graph the total statement length per year
+
+ggplot(yearly.length, aes(x=yearly.length$year,y=yearly.length$words.per.year))+geom_bar(stat="identity",fill="darkblue", colour="black") + coord_flip()+xlab("Year")+ylab("Statement Length")
+```
+
+
+```{r}
+#Verify word count for a sample word in a sample statement
+
+sample<-reports%>%filter(reports$statement.dates=="20140319")
+sample[,4]
+str_count(sample, pattern="inflation")
+```
+
+
+### Trend in Statement Length by year and Fed Chair
+It seems that the FOMC statements became progressively verbose under Chairman Bernanke until they reached a peak in 2014 when Janet Yellen took over as the Fed Chair. Since then the statements have gotten shorter. The current chairman Jerome Powell took over in February 2018.
+
+```{r}
+
+# Graph the annual trend in statement length, annotated by Fed Chair
+
+p<-ggplot(reports, aes(x=year,y=statement.length))+geom_point(stat="identity",color=statement.dates)+scale_fill_brewer(palette="Pastel1")+theme(legend.position="right")+xlab("Year") + ylab("Length of Statement")
+
+p + ggplot2::annotate("text", x = 4,y = 5000, label = "Bernanke", family="serif", fontface="bold", colour="blue", size=4)+ggplot2::annotate("text", x=10, y=5500, label="Yellen", family="serif", fontface="bold", colour="darkred",size=4)+ggplot2::annotate("text", x=13, y=3600, label="Powell", family="serif", fontface="bold", colour="black",size=4)+ggplot2::annotate("segment", x = 0, xend = 8.1, y = 2700, yend = 6500, colour = "blue", size=1, arrow=arrow(ends="both"))+ggplot2::annotate("segment", x = 8.1, xend = 12.1, y = 6500, yend = 3200, colour = "darkred", size=1, arrow=arrow(ends="both"))+ggplot2::annotate("segment", x = 12.1, xend = 14, y = 3200, yend = 3200, colour = "black", size=1, arrow=arrow(ends="both"))
+  
+```
+
+
+### Adding custom words and names to stop words
+Remove proper nouns and irrelevant words from further analysis by adding them as custom words to the stop words lexicon
+
+```{r}
+#print(stop_words)
+words<-c("committee", "ben", "geithner", "bernanke", "timothy", "hoenig", "thomas", "donald", "kevin", "mishkin", "kroszner", "kohn", "charles", "frederic")
+lexicon<-c("Custom")
+my.stop_words<-data.frame(words, lexicon)
+colnames(my.stop_words)<-c("word","lexicon")
+new.stop_words <- rbind(my.stop_words, stop_words)
+new.stop_words$word<-as.character(new.stop_words$word)
+new.stop_words$lexicon<-as.character(new.stop_words$lexicon)
+head(new.stop_words)
+```
+
+
+```{r}
+# Strip out punctuations, white space and custom stop words
+
+report.words<-reports %>%mutate(date = statement.dates, year = year, text= statement.content) %>% unnest(text) %>% unnest_tokens(word, text) %>%mutate(word = stripWhitespace(gsub("[^A-Za-z ]"," ",word))) %>% filter(word != "") %>% filter(word != " ") %>%anti_join(new.stop_words)%>% count(date, year, word, sort = TRUE)%>% mutate(frequency = n) %>% select(date, year, word, frequency)
+```
+```{r}
+# Report word frequency by statement date
+
+report.words%>%filter(year=='2007', word=='inflation')
+```
+
+
+```{r fig.width = 12, fig.asp = .90}
+
+# Rank most frequent words by year
+
+f_text<-report.words%>% group_by(year,word) %>% summarize(total=sum(frequency))%>%arrange(year,desc(total),word)%>% mutate(rank=row_number())%>%ungroup() %>% arrange(rank,year)
+
+#print(f_text)
+
+topWords <- f_text %>% filter(rank<11)%>%arrange(year,rank)
+print(topWords)
+
+```
+
+
+```{r fig.width = 15, fig.asp = 0.95}
+
+# Graph top 10 most frequent words by year
+
+gg <- ggplot(head(topWords, 130), aes(y=total,x=reorder(word,rank))) + geom_col(fill="#27408b")+
+  facet_wrap(~year,scales="free", ncol=3)+ coord_flip()+theme_ridges(font_size=11)+
+  labs(x="",y="",title="Most Frequent Words in FOMC Statements grouped by years (2007 - 2019")
+
+gg
+```
+
