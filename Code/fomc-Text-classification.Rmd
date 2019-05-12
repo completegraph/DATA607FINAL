@@ -27,7 +27,8 @@ library(LiblineaR) # new
 
 5.1 Text Classifications
 
-##### The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than two classes) while only one (`Medium.Term.Rate`) is binary
+##### The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than two classes) while only one (`Medium.Term.Rate`) is binary.
+
 
 ##### Read the data
 
