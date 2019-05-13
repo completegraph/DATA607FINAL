@@ -64,7 +64,7 @@ Central bank announcements of interest rate trajectories and monetary policy are
 
 Our approach to analyzing the FOMC statement is through the lense of textual analysis. Two approaches are used in this project: Sentiment analysis is applied to the FOMC text corpus and used to construct a sentiment time series. That time series is then used as an explanatory variable to compare to real-word financial time series. Time series charting and inear regression are the main tools of that approach.
 
-The second approach is via text classification. The textual analysis of FOMC statements is not exclusive to data science. Financial market practitioners pore over every word, gesture and media interview of the Federal Reserve chairman or chairwoman, governors and District presidents. Some financial news vendors like Bloomberg even publish text comparisons - showing the redlined differences between two FOMC statements. Our approach via text classification attempts to automate the classification of each FOMC statement by several attributes. The attributes include the hawkishness or dovishness of the statement, the FOMC’s opinion of economic growth or labor market health. The method used here is to manually label each FOMC statement and then to train a support vector machine algorithm to predict each attribute.
+The second approach is via text classification. The textual analysis of FOMC statements is not exclusive to data science. Financial market practitioners pore over every word, gesture and media interview of the Federal Reserve chairman or chairwoman, governors and District presidents. Some financial news vendors like Bloomberg even publish text comparisons - showing the redlined differences between two FOMC statements. Our approach via text classification attempts to automate the classification of each FOMC statement by several attributes. The attributes include the hawkishness or dovishness of the statement, the FOMC's opinion of economic growth or labor market health. The method used here is to manually label each FOMC statement and then to train a support vector machine algorithm to predict each attribute.
 
 This paper is organized as follows: Section 2 gives background on the Federal Reserve, the FOMC and past research. Section 3 describes the sources of data: the FOMC statements, the manual labelling of statements, the financial time series. Section 4 performs exploratory data analysis on these data sources. Section 5 conducts two analysis: the first half addresses the machine learning training work to classify statements by 5 attributes. the second half conducts sentiment analysis. Section 6 discusses the results and Section 7 concludes this project.
 
@@ -132,10 +132,12 @@ This detailed description of the FOMC serves two purposes: (a) to describe the m
 
 Our project is inspired and guided by past work in this field. There is a research literature and past work on FOMC statement analysis using data science methods. A related but distinct literature on the financial market impact of central bank communications is also relevant motivation. Moreover, the authors are aware of several financial institutions and companies engaged in the use of machine learning techniques to analyze central bank communications. We will touch on these in turn.
 
-Cannon’s 2015 paper on FOMC sentiment analysis uses the transcripts instead of FOMC statements. He uses the financial dictionary of Loughran-McDonald to construct sentiment and defines it using a bag of words count method. The R package we use to derive sentiment calculates the same metric which is:
+Cannon's 2015 paper on FOMC sentiment analysis uses the transcripts instead of FOMC statements. He uses the financial dictionary of Loughran-McDonald to construct sentiment and defines it using a bag of words count method. The R package we use to derive sentiment calculates the same metric which is:
 
-sentiment(Document)=PositiveWords−NegativeWordsPositiveWords+NegativeWords
-However, he compares the sentiment index against real economic activity proxied by the Chicago Fed National Activity Index – not against financial market variables. A 2011 paper by Lucca and Trebbi analyzes the FOMC statements directly but measure hawkish and dovish tone not sentiment. In addition, their measurement technique is to use search engines (Google or Factiva) to generate a correlation of the word count hits in the search engine’s corpus between the words “hawk” or “dove” and each relevant word or N-gram from the policy statement. They call their approach a semantic orientation method to analyzing the statements. This measurement technique is not reproducible and computationally impractical. Another paper by Schmeling and Wagner (2019) analyzes sentiment in European Central Bank (ECB) policy statements, which are in English, using the Loughran-McDonald dictionary. They find that tone does seem to affect the risk premia of equities through a risk-based channel. I.e. Higher beta stocks respond more to ECB tone than lower beta stocks. They also find that corporate bond credit spreads between BBB and AAA rated bonds tighten when tone is positive. Lastly, Fuksa and Sornette (2012) analyze FOMC Beige Book, minutes and policy statements for sentiment. They find predictive power in the Beige Book which is released 3 weeks before the policy statement. Thus, analyzing Beige Book sentiment could predict FOMC policy actions.
+
+$sentiment(doc) = \frac{P-N}{P+N}$ where P, N are the number of positive and negative words in the document respectively
+
+However, he compares the sentiment index against real economic activity proxied by the Chicago Fed National Activity Index as not against financial market variables. A 2011 paper by Lucca and Trebbi analyzes the FOMC statements directly but measure hawkish and dovish tone not sentiment. In addition, their measurement technique is to use search engines (Google or Factiva) to generate a correlation of the word count hits in the search engine's corpus between the words "hawk"" or "dove"" and each relevant word or N-gram from the policy statement. They call their approach a semantic orientation method to analyzing the statements. This measurement technique is not reproducible and computationally impractical. Another paper by Schmeling and Wagner (2019) analyzes sentiment in European Central Bank (ECB) policy statements, which are in English, using the Loughran-McDonald dictionary. They find that tone does seem to affect the risk premia of equities through a risk-based channel. I.e. Higher beta stocks respond more to ECB tone than lower beta stocks. They also find that corporate bond credit spreads between BBB and AAA rated bonds tighten when tone is positive. Lastly, Fuksa and Sornette (2012) analyze FOMC Beige Book, minutes and policy statements for sentiment. They find predictive power in the Beige Book which is released 3 weeks before the policy statement. Thus, analyzing Beige Book sentiment could predict FOMC policy actions.
 
 A separate literature on the central bank impact on asset prices finds the FOMC meetings and statements are important. Cieslak, et.al. (2018) find that US and global stock returns are driven by the FOMC meeting cycle. Since 1994 the equity premium has been earned on even numbered weeks of the FOMC cycle. However, Brusa, et. al. (2017) find evidence that no other central banks have the same equity market impact as the Fed.
 
@@ -331,6 +333,7 @@ cls = read_csv(classificationFile , col_types = cols( Date = col_character() ) )
 cls %>% rename( Economic.Growth = "Economic Growth", Employment.Growth = "Employment Growth", Medium.Term.Rate = "Medium Term Rate", Policy.Rate = "Policy Rate") -> cls
 str(cls)
 ```
+
 ### 3.2.2 Merging FOMC data and Classification Data
 
 ```{r}
@@ -548,6 +551,7 @@ We inspect the categorical data to check for distribution and  covariation patte
 ```{r}
 mgData<-readRDS(file = "fomc_merged_data_v2.rds")
 ```
+
 
 ### 4.2.2 Frequency Distributions of Each Attribute
 
@@ -787,9 +791,10 @@ customStopWords <- c("the federal open market committee", "committee")
 ```
 
 
-```{r}
-fomc_dataX <- fomc_Rand %>% mutate(statement.content = tolower(statement.content))
-fomc_dataX$statement.content <- str_replace_all(fomc_dataX$statement.content, customStopWords, "")
+```{r message=FALSE, warning=FALSE}
+
+fomc_dataX <- fomc_Rand %>% mutate(statement.content = tolower(statement.content))%>%mutate(statement.content = str_replace_all(statement.content, customStopWords, ""))
+
 ```
 
 
@@ -813,7 +818,7 @@ corpus <- tm_map(corpus, stripWhitespace)
 # Create Document Term Matrix
 dtm <- DocumentTermMatrix(corpus)
 # handle sparsity
-corpusX <- removeSparseTerms(dtm, 0.95)
+corpusX <- removeSparseTerms(dtm, 0.30)
 # convert to matrix
 data_matrix <- as.matrix(corpusX)
 ```
@@ -842,7 +847,7 @@ mRateData$tone <- as.factor(tolower(mRateData$tone))
 
 ```{r}
 mRate_n <- nrow(mRateData)
-mRateTrainVolume <- round(mRate_n * 0.80)
+mRateTrainVolume <- round(mRate_n * 0.68)
 set.seed(314)
 mRateTrainIndex <- sample(mRate_n, mRateTrainVolume)
 mRateTrain <- mRateData[mRateTrainIndex,]
@@ -885,7 +890,7 @@ econData$egrowth <- as.factor(econData$egrowth)
 
 ```{r}
 econ_n <- nrow(econData)
-econTrainVolume <- round(econ_n * 0.58)
+econTrainVolume <- round(econ_n * 0.70)
 set.seed(314)
 econTrainIndex <- sample(econ_n, econTrainVolume)
 econTrain <- econData[econTrainIndex,]
@@ -917,7 +922,7 @@ econResult <- predict(econModel, newdata = econTest)
 # Create Document Term Matrix
 dtmI <- DocumentTermMatrix(corpus)
 # handle sparsity
-corpusI <- removeSparseTerms(dtm, 0.94)
+corpusI <- removeSparseTerms(dtm, 0.80)
 # convert to matrix
 data_matrixI <- as.matrix(corpusI)
 inflation <- data_matrixI
@@ -943,7 +948,7 @@ infDataX <- inflationData[, -which(names(inflationData) %in% c("although", "will
 
 ```{r}
 inf_n <- nrow(infDataX)
-infTrainVolume <- round(inf_n * 0.70)
+infTrainVolume <- round(inf_n * 0.68)
 set.seed(314)
 infTrainIndex <- sample(inf_n, infTrainVolume)
 infTrain <- infDataX[infTrainIndex,]
@@ -985,7 +990,7 @@ empData$empGrowth <- as.factor(empData$empGrowth)
 
 ```{r}
 emp_n <- nrow(empData)
-empTrainVolume <- round(emp_n * 0.80)
+empTrainVolume <- round(emp_n * 0.70)
 set.seed(314)
 empTrainIndex <- sample(emp_n, empTrainVolume)
 empTrain <- empData[empTrainIndex,]
@@ -1028,7 +1033,7 @@ plData$policy <- as.factor(plData$policy)
 
 ```{r}
 pl_n <- nrow(plData)
-plTrainVolume <- round(pl_n * 0.80)
+plTrainVolume <- round(pl_n * 0.68)
 set.seed(314)
 plTrainIndex <- sample(pl_n, plTrainVolume)
 plTrain <- plData[empTrainIndex,]
@@ -1058,17 +1063,18 @@ Table of summary
 ```{r fig.width = 10, fig.asp = .80}
 
 
-results <- tibble(variable = c("Medium.Term.Rate","Employment.Growth","Economic.Growth","Inflation","Policy.Rate"), modelling = c("80 : 20", "80 : 20", "58 : 42", "70 : 30", "80 : 20"), accuracy= c(100, 90, 79.1, 64.52, 95)) 
+results <- tibble(variable = c("Medium.Term.Rate","Employment.Growth","Economic.Growth","Inflation","Policy.Rate"), modelling = c("68 : 32", "70 : 30", "70 : 30", "68 : 32", "68 : 32"), accuracy= c(93.75, 80, 66.67, 68.75, 83.33)) 
 
- kable(results,
+  kable(results,
       col.names = linebreak(c("Variable", "Modelling (Train : Test)", "Accuracy (%)"), align = "c")) %>%
-  kable_styling("striped", full_width = T) %>%
+  kable_styling("striped", bootstrap_options = c("hover", "striped")) %>%
   column_spec(1:3, bold = T, color = "#000") %>%
   row_spec(1:5, bold = T, color = "#000")
+  
 ```
 
 
-For some of the variables, extra fine-tuning of the data was not needed to achieve appreciable accuracy. But for the `Economic.Growth` variable, we needed to adjust the ratio of training set to test data set to `58:42` to achieve an accuracy of `79.10%`. For the `Inflation` variable we had to adjust sparsity to `0.94`, removed 13 unuseful columns, adjusted the ratio of training to test data sets to `70:30` before we could achieve an accuracy of `64.52%`
+For some of the variables, extra fine-tuning of the data was not needed to achieve appreciable accuracy. But for the `Economic.Growth` variable, we needed to adjust the ratio of training set to test data set to `70:30` to achieve an accuracy of `66.67%`. For the `Inflation` variable we had to adjust sparsity to `0.80`, removed 13 unuseful columns, adjusted the ratio of training to test data sets to `68:32` before we could achieve an accuracy of `68.75%`
 
 We can conclude that these values obtained, though not perfect, did go a long way to align with the human based scoring/classification of the economy trends based on the variables considered within the selected years. There are much room left for improvements and further analysis but we cannot go beyond this level right now as time will not permit us
 
@@ -1076,7 +1082,7 @@ We can conclude that these values obtained, though not perfect, did go a long wa
 
 Text classification of FOMC statements is not generally a research objective but we think it is worthwhile.   Classification addresses a potential need:  Can a machine correctly infer the opinion or direction of forward guidance or policy decisions in a structured text by the FOMC?   In this regard, the classification problem for the FOMC is isomorphic to the Ham-Spam classification of incoming emails by an email program.  However, the reader may object that FOMC statements are not so voluminous to require automated processing.   Our response is that FOMC statements are merely the first baby step in a much larger classification problem:  the public communications of all FOMC and Federal Reserve system members.   As previously explained, the FOMC members give speeches, publish articles, appear on TV interviews.   Moreover, FOMC meeting minutes are released several weeks after the policy statement is released.  These are much longer and required more effort to read and digest.  Also, the FOMC transcripts released several years after the meeting may run to over 100 pages each.  They contain word for word replay of the entire meeting (excluding private discussions).   Lastly, there are at least 16 relevant central banks around the world of interest.  Although the Fed is the world's more important central bank, the ECB, Bank of England, Bank of Japan, Bank of China, Bank of Australia, Bank of New Zealand, all produce communications.  In summary, no single person can read all central bank communications.   The ability to extract key messages from plain texts remains a valuable capability.
 
-Our machine learning prediction backtest suggests that automated classification is feasible to detect limited features of a central bank communication.   Our algorithm succeeds at detecting medium term rate outlooks, employment growth and policy rate changes.  At these tasks, we have attained accuracy rates between 90-100 percent.   The most challenging attribute to understand is inflation (64.5%).  This is consistent with financial practitioner opinion.  Inflation is the most complex of these areas to quantify, control and manage.  That is because inflation has 4 distinct aspects:  realized inflation (price changes from past surveys), market based real yields of TIPS bonds and inflation swaps, and long term expectations of inflation, inflation measured with or without volatile sectors: food and energy.   Because the statements may treat some or all of these aspects we believe accuracy in understanding FOMC inflation views is hard.
+Our machine learning prediction backtest suggests that automated classification is feasible to detect limited features of a central bank communication.   Our algorithm succeeds at detecting medium term rate outlooks, employment growth and policy rate changes.  At these tasks, we have attained accuracy rates between 80-93.75 percent.   The most challenging attribute to understand is inflation (64.5%).  This is consistent with financial practitioner opinion.  Inflation is the most complex of these areas to quantify, control and manage.  That is because inflation has 4 distinct aspects:  realized inflation (price changes from past surveys), market based real yields of TIPS bonds and inflation swaps, and long term expectations of inflation, inflation measured with or without volatile sectors: food and energy.   Because the statements may treat some or all of these aspects we believe accuracy in understanding FOMC inflation views is hard.
 
 
 ## 5.3 Sentiment Analysis

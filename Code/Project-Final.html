@@ -413,7 +413,7 @@ div.tocify {
 <h1>1. The Purpose of Study</h1>
 <p>Central bank announcements of interest rate trajectories and monetary policy are among the most impactful events to global financial markets. This project uses data science to analyze Federal Reserve policy statements and seeks insight on their sentiment and relationship to financial market variables. By conducting this study, we identify some tangible results of interest but also lay out a basic foundation for a programme of future inquiry.</p>
 <p>Our approach to analyzing the FOMC statement is through the lense of textual analysis. Two approaches are used in this project: Sentiment analysis is applied to the FOMC text corpus and used to construct a sentiment time series. That time series is then used as an explanatory variable to compare to real-word financial time series. Time series charting and inear regression are the main tools of that approach.</p>
-<p>The second approach is via text classification. The textual analysis of FOMC statements is not exclusive to data science. Financial market practitioners pore over every word, gesture and media interview of the Federal Reserve chairman or chairwoman, governors and District presidents. Some financial news vendors like Bloomberg even publish text comparisons - showing the redlined differences between two FOMC statements. Our approach via text classification attempts to automate the classification of each FOMC statement by several attributes. The attributes include the hawkishness or dovishness of the statement, the FOMCâs opinion of economic growth or labor market health. The method used here is to manually label each FOMC statement and then to train a support vector machine algorithm to predict each attribute.</p>
+<p>The second approach is via text classification. The textual analysis of FOMC statements is not exclusive to data science. Financial market practitioners pore over every word, gesture and media interview of the Federal Reserve chairman or chairwoman, governors and District presidents. Some financial news vendors like Bloomberg even publish text comparisons - showing the redlined differences between two FOMC statements. Our approach via text classification attempts to automate the classification of each FOMC statement by several attributes. The attributes include the hawkishness or dovishness of the statement, the FOMC’s opinion of economic growth or labor market health. The method used here is to manually label each FOMC statement and then to train a support vector machine algorithm to predict each attribute.</p>
 <p>This paper is organized as follows: Section 2 gives background on the Federal Reserve, the FOMC and past research. Section 3 describes the sources of data: the FOMC statements, the manual labelling of statements, the financial time series. Section 4 performs exploratory data analysis on these data sources. Section 5 conducts two analysis: the first half addresses the machine learning training work to classify statements by 5 attributes. the second half conducts sentiment analysis. Section 6 discusses the results and Section 7 concludes this project.</p>
 </div>
 <div id="background" class="section level1">
@@ -468,8 +468,9 @@ div.tocify {
 <div id="past-research" class="section level2">
 <h2>2.3 Past Research</h2>
 <p>Our project is inspired and guided by past work in this field. There is a research literature and past work on FOMC statement analysis using data science methods. A related but distinct literature on the financial market impact of central bank communications is also relevant motivation. Moreover, the authors are aware of several financial institutions and companies engaged in the use of machine learning techniques to analyze central bank communications. We will touch on these in turn.</p>
-<p>Cannonâs 2015 paper on FOMC sentiment analysis uses the transcripts instead of FOMC statements. He uses the financial dictionary of Loughran-McDonald to construct sentiment and defines it using a bag of words count method. The R package we use to derive sentiment calculates the same metric which is:</p>
-<p>sentiment(Document)=PositiveWordsâNegativeWordsPositiveWords+NegativeWords However, he compares the sentiment index against real economic activity proxied by the Chicago Fed National Activity Index â not against financial market variables. A 2011 paper by Lucca and Trebbi analyzes the FOMC statements directly but measure hawkish and dovish tone not sentiment. In addition, their measurement technique is to use search engines (Google or Factiva) to generate a correlation of the word count hits in the search engineâs corpus between the words âhawkâ or âdoveâ and each relevant word or N-gram from the policy statement. They call their approach a semantic orientation method to analyzing the statements. This measurement technique is not reproducible and computationally impractical. Another paper by Schmeling and Wagner (2019) analyzes sentiment in European Central Bank (ECB) policy statements, which are in English, using the Loughran-McDonald dictionary. They find that tone does seem to affect the risk premia of equities through a risk-based channel. I.e. Higher beta stocks respond more to ECB tone than lower beta stocks. They also find that corporate bond credit spreads between BBB and AAA rated bonds tighten when tone is positive. Lastly, Fuksa and Sornette (2012) analyze FOMC Beige Book, minutes and policy statements for sentiment. They find predictive power in the Beige Book which is released 3 weeks before the policy statement. Thus, analyzing Beige Book sentiment could predict FOMC policy actions.</p>
+<p>Cannon’s 2015 paper on FOMC sentiment analysis uses the transcripts instead of FOMC statements. He uses the financial dictionary of Loughran-McDonald to construct sentiment and defines it using a bag of words count method. The R package we use to derive sentiment calculates the same metric which is:</p>
+<p><span class="math inline">\(sentiment(doc) = \frac{P-N}{P+N}\)</span> where P, N are the number of positive and negative words in the document respectively</p>
+<p>However, he compares the sentiment index against real economic activity proxied by the Chicago Fed National Activity Index as not against financial market variables. A 2011 paper by Lucca and Trebbi analyzes the FOMC statements directly but measure hawkish and dovish tone not sentiment. In addition, their measurement technique is to use search engines (Google or Factiva) to generate a correlation of the word count hits in the search engine’s corpus between the words “hawk”&quot; or “dove”&quot; and each relevant word or N-gram from the policy statement. They call their approach a semantic orientation method to analyzing the statements. This measurement technique is not reproducible and computationally impractical. Another paper by Schmeling and Wagner (2019) analyzes sentiment in European Central Bank (ECB) policy statements, which are in English, using the Loughran-McDonald dictionary. They find that tone does seem to affect the risk premia of equities through a risk-based channel. I.e. Higher beta stocks respond more to ECB tone than lower beta stocks. They also find that corporate bond credit spreads between BBB and AAA rated bonds tighten when tone is positive. Lastly, Fuksa and Sornette (2012) analyze FOMC Beige Book, minutes and policy statements for sentiment. They find predictive power in the Beige Book which is released 3 weeks before the policy statement. Thus, analyzing Beige Book sentiment could predict FOMC policy actions.</p>
 <p>A separate literature on the central bank impact on asset prices finds the FOMC meetings and statements are important. Cieslak, et.al. (2018) find that US and global stock returns are driven by the FOMC meeting cycle. Since 1994 the equity premium has been earned on even numbered weeks of the FOMC cycle. However, Brusa, et. al. (2017) find evidence that no other central banks have the same equity market impact as the Fed.</p>
 </div>
 </div>
@@ -3454,11 +3455,7 @@ fomc_Rand &lt;-<span class="st"> </span>fomc_data[<span class="kw">sample</span>
 <div id="preliminary-data-cleansing-convert-the-statements-textual-contents-to-lower-and-remove-the-federal-open-market-committee-and-committee-as-it-is-present-in-all-the-statements" class="section level5">
 <h5>Preliminary data cleansing: convert the statements’ textual contents to lower and remove <code>the federal open market committee</code> and <code>committee</code> as it is present in all the statements</h5>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">customStopWords &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;the federal open market committee&quot;</span>, <span class="st">&quot;committee&quot;</span>)</code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fomc_dataX &lt;-<span class="st"> </span>fomc_Rand <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">statement.content =</span> <span class="kw">tolower</span>(statement.content))
-fomc_dataX<span class="op">$</span>statement.content &lt;-<span class="st"> </span><span class="kw">str_replace_all</span>(fomc_dataX<span class="op">$</span>statement.content, customStopWords, <span class="st">&quot;&quot;</span>)</code></pre></div>
-<pre><code>## Warning in stri_replace_all_regex(string, pattern,
-## fix_replacement(replacement), : longer object length is not a multiple of
-## shorter object length</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fomc_dataX &lt;-<span class="st"> </span>fomc_Rand <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">statement.content =</span> <span class="kw">tolower</span>(statement.content))<span class="op">%&gt;%</span><span class="kw">mutate</span>(<span class="dt">statement.content =</span> <span class="kw">str_replace_all</span>(statement.content, customStopWords, <span class="st">&quot;&quot;</span>))</code></pre></div>
 </div>
 <div id="data-preparation-here-we-prepare-the-data-so-that-it-can-be-reused-for-all-the-classifications-without-the-need-to-repeat-the-leaning-and-preparation-processes-gaain" class="section level5">
 <h5>Data Preparation: Here, we prepare the data so that it can be reused for all the classifications without the need to repeat the leaning and preparation processes gaain</h5>
@@ -3479,7 +3476,7 @@ corpus &lt;-<span class="st"> </span><span class="kw">tm_map</span>(corpus, stri
 <span class="co"># Create Document Term Matrix</span>
 dtm &lt;-<span class="st"> </span><span class="kw">DocumentTermMatrix</span>(corpus)
 <span class="co"># handle sparsity</span>
-corpusX &lt;-<span class="st"> </span><span class="kw">removeSparseTerms</span>(dtm, <span class="fl">0.95</span>)
+corpusX &lt;-<span class="st"> </span><span class="kw">removeSparseTerms</span>(dtm, <span class="fl">0.30</span>)
 <span class="co"># convert to matrix</span>
 data_matrix &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(corpusX)</code></pre></div>
 </div>
@@ -3503,7 +3500,7 @@ mRateData<span class="op">$</span>tone &lt;-<span class="st"> </span><span class
 <div id="partition-the-data-into-training-and-test-sets" class="section level5">
 <h5>Partition the data into training and test sets</h5>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mRate_n &lt;-<span class="st"> </span><span class="kw">nrow</span>(mRateData)
-mRateTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(mRate_n <span class="op">*</span><span class="st"> </span><span class="fl">0.80</span>)
+mRateTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(mRate_n <span class="op">*</span><span class="st"> </span><span class="fl">0.68</span>)
 <span class="kw">set.seed</span>(<span class="dv">314</span>)
 mRateTrainIndex &lt;-<span class="st"> </span><span class="kw">sample</span>(mRate_n, mRateTrainVolume)
 mRateTrain &lt;-<span class="st"> </span>mRateData[mRateTrainIndex,]
@@ -3515,26 +3512,26 @@ mRateTest &lt;-<span class="st"> </span>mRateData[<span class="op">-</span>mRate
 ## 
 ##           Reference
 ## Prediction dove hawk
-##       dove   14    3
-##       hawk    0    3
+##       dove   22    2
+##       hawk    0    8
 ##                                           
-##                Accuracy : 0.85            
-##                  95% CI : (0.6211, 0.9679)
-##     No Information Rate : 0.7             
-##     P-Value [Acc &gt; NIR] : 0.1071          
+##                Accuracy : 0.9375          
+##                  95% CI : (0.7919, 0.9923)
+##     No Information Rate : 0.6875          
+##     P-Value [Acc &gt; NIR] : 0.0007323       
 ##                                           
-##                   Kappa : 0.5833          
+##                   Kappa : 0.8462          
 ##                                           
-##  Mcnemar's Test P-Value : 0.2482          
+##  Mcnemar's Test P-Value : 0.4795001       
 ##                                           
 ##             Sensitivity : 1.0000          
-##             Specificity : 0.5000          
-##          Pos Pred Value : 0.8235          
+##             Specificity : 0.8000          
+##          Pos Pred Value : 0.9167          
 ##          Neg Pred Value : 1.0000          
-##              Prevalence : 0.7000          
-##          Detection Rate : 0.7000          
-##    Detection Prevalence : 0.8500          
-##       Balanced Accuracy : 0.7500          
+##              Prevalence : 0.6875          
+##          Detection Rate : 0.6875          
+##    Detection Prevalence : 0.7500          
+##       Balanced Accuracy : 0.9000          
 ##                                           
 ##        'Positive' Class : dove            
 ## </code></pre>
@@ -3557,7 +3554,7 @@ econData<span class="op">$</span>egrowth &lt;-<span class="st"> </span><span cla
 <div id="partition-the-data-into-training-and-test-sets-note-that-the-ratios-here-are-different-from-the-other-models" class="section level5">
 <h5>Partition the data into training and test sets: note that the ratios here are different from the other models</h5>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">econ_n &lt;-<span class="st"> </span><span class="kw">nrow</span>(econData)
-econTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(econ_n <span class="op">*</span><span class="st"> </span><span class="fl">0.58</span>)
+econTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(econ_n <span class="op">*</span><span class="st"> </span><span class="fl">0.70</span>)
 <span class="kw">set.seed</span>(<span class="dv">314</span>)
 econTrainIndex &lt;-<span class="st"> </span><span class="kw">sample</span>(econ_n, econTrainVolume)
 econTrain &lt;-<span class="st"> </span>econData[econTrainIndex,]
@@ -3569,32 +3566,32 @@ econTest &lt;-<span class="st"> </span>econData[<span class="op">-</span>econTra
 ## 
 ##           Reference
 ## Prediction down flat up
-##       down    5    0  1
-##       flat    4    1  1
-##       up      5    2 23
+##       down    3    0  0
+##       flat    3    0  0
+##       up      4    3 17
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.6905          
-##                  95% CI : (0.5291, 0.8238)
-##     No Information Rate : 0.5952          
-##     P-Value [Acc &gt; NIR] : 0.1350          
+##                Accuracy : 0.6667          
+##                  95% CI : (0.4719, 0.8271)
+##     No Information Rate : 0.5667          
+##     P-Value [Acc &gt; NIR] : 0.17896         
 ##                                           
-##                   Kappa : 0.4013          
+##                   Kappa : 0.3377          
 ##                                           
-##  Mcnemar's Test P-Value : 0.0719          
+##  Mcnemar's Test P-Value : 0.01857         
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: down Class: flat Class: up
-## Sensitivity               0.3571     0.33333    0.9200
-## Specificity               0.9643     0.87179    0.5882
-## Pos Pred Value            0.8333     0.16667    0.7667
-## Neg Pred Value            0.7500     0.94444    0.8333
-## Prevalence                0.3333     0.07143    0.5952
-## Detection Rate            0.1190     0.02381    0.5476
-## Detection Prevalence      0.1429     0.14286    0.7143
-## Balanced Accuracy         0.6607     0.60256    0.7541</code></pre>
+## Sensitivity               0.3000      0.0000    1.0000
+## Specificity               1.0000      0.8889    0.4615
+## Pos Pred Value            1.0000      0.0000    0.7083
+## Neg Pred Value            0.7407      0.8889    1.0000
+## Prevalence                0.3333      0.1000    0.5667
+## Detection Rate            0.1000      0.0000    0.5667
+## Detection Prevalence      0.1000      0.1000    0.8000
+## Balanced Accuracy         0.6500      0.4444    0.7308</code></pre>
 </div>
 </div>
 <div id="inflation-1" class="section level3">
@@ -3604,7 +3601,7 @@ econTest &lt;-<span class="st"> </span>econData[<span class="op">-</span>econTra
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Create Document Term Matrix</span>
 dtmI &lt;-<span class="st"> </span><span class="kw">DocumentTermMatrix</span>(corpus)
 <span class="co"># handle sparsity</span>
-corpusI &lt;-<span class="st"> </span><span class="kw">removeSparseTerms</span>(dtm, <span class="fl">0.94</span>)
+corpusI &lt;-<span class="st"> </span><span class="kw">removeSparseTerms</span>(dtm, <span class="fl">0.80</span>)
 <span class="co"># convert to matrix</span>
 data_matrixI &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(corpusI)
 inflation &lt;-<span class="st"> </span>data_matrixI
@@ -3621,7 +3618,7 @@ inflationData<span class="op">$</span>inflation &lt;-<span class="st"> </span><s
 <h5>Remove columns that will not contribute meaninfully to the model fitting</h5>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">infDataX &lt;-<span class="st"> </span>inflationData[, <span class="op">-</span><span class="kw">which</span>(<span class="kw">names</span>(inflationData) <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;although&quot;</span>, <span class="st">&quot;william&quot;</span>, <span class="st">&quot;richard&quot;</span>, <span class="st">&quot;raphael&quot;</span>, <span class="st">&quot;randal&quot;</span>, <span class="st">&quot;san&quot;</span>, <span class="st">&quot;sarah&quot;</span>,<span class="st">&quot;sandra&quot;</span>, <span class="st">&quot;togeth&quot;</span>, <span class="st">&quot;timothi&quot;</span>,<span class="st">&quot;committe&quot;</span>,<span class="st">&quot;dudley&quot;</span>,<span class="st">&quot;esther&quot;</span>))]</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">inf_n &lt;-<span class="st"> </span><span class="kw">nrow</span>(infDataX)
-infTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(inf_n <span class="op">*</span><span class="st"> </span><span class="fl">0.70</span>)
+infTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(inf_n <span class="op">*</span><span class="st"> </span><span class="fl">0.68</span>)
 <span class="kw">set.seed</span>(<span class="dv">314</span>)
 infTrainIndex &lt;-<span class="st"> </span><span class="kw">sample</span>(inf_n, infTrainVolume)
 infTrain &lt;-<span class="st"> </span>infDataX[infTrainIndex,]
@@ -3633,32 +3630,32 @@ infTest &lt;-<span class="st"> </span>infDataX[<span class="op">-</span>infTrain
 ## 
 ##           Reference
 ## Prediction down flat up
-##       down    6    4  0
-##       flat    1    9  1
-##       up      3    2  4
+##       down    8    4  0
+##       flat    2   10  1
+##       up      2    1  4
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.6333          
-##                  95% CI : (0.4386, 0.8007)
-##     No Information Rate : 0.5             
-##     P-Value [Acc &gt; NIR] : 0.1002          
+##                Accuracy : 0.6875          
+##                  95% CI : (0.4999, 0.8388)
+##     No Information Rate : 0.4688          
+##     P-Value [Acc &gt; NIR] : 0.01037         
 ##                                           
-##                   Kappa : 0.4407          
+##                   Kappa : 0.5077          
 ##                                           
-##  Mcnemar's Test P-Value : 0.1623          
+##  Mcnemar's Test P-Value : 0.44592         
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: down Class: flat Class: up
-## Sensitivity               0.6000      0.6000    0.8000
-## Specificity               0.8000      0.8667    0.8000
-## Pos Pred Value            0.6000      0.8182    0.4444
-## Neg Pred Value            0.8000      0.6842    0.9524
-## Prevalence                0.3333      0.5000    0.1667
-## Detection Rate            0.2000      0.3000    0.1333
-## Detection Prevalence      0.3333      0.3667    0.3000
-## Balanced Accuracy         0.7000      0.7333    0.8000</code></pre>
+## Sensitivity               0.6667      0.6667    0.8000
+## Specificity               0.8000      0.8235    0.8889
+## Pos Pred Value            0.6667      0.7692    0.5714
+## Neg Pred Value            0.8000      0.7368    0.9600
+## Prevalence                0.3750      0.4688    0.1562
+## Detection Rate            0.2500      0.3125    0.1250
+## Detection Prevalence      0.3750      0.4062    0.2188
+## Balanced Accuracy         0.7333      0.7451    0.8444</code></pre>
 </div>
 </div>
 <div id="employment.growth" class="section level3">
@@ -3675,7 +3672,7 @@ empData &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(emp_
 <span class="co"># convert 'empGrowth' to a factor column as well</span>
 empData<span class="op">$</span>empGrowth &lt;-<span class="st"> </span><span class="kw">as.factor</span>(empData<span class="op">$</span>empGrowth)</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">emp_n &lt;-<span class="st"> </span><span class="kw">nrow</span>(empData)
-empTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(emp_n <span class="op">*</span><span class="st"> </span><span class="fl">0.80</span>)
+empTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(emp_n <span class="op">*</span><span class="st"> </span><span class="fl">0.70</span>)
 <span class="kw">set.seed</span>(<span class="dv">314</span>)
 empTrainIndex &lt;-<span class="st"> </span><span class="kw">sample</span>(emp_n, empTrainVolume)
 empTrain &lt;-<span class="st"> </span>empData[empTrainIndex,]
@@ -3687,32 +3684,32 @@ empTest &lt;-<span class="st"> </span>empData[<span class="op">-</span>empTrainI
 ## 
 ##           Reference
 ## Prediction down flat up
-##       down    4    0  0
-##       flat    3    1  0
-##       up      0    1 11
+##       down    5    0  0
+##       flat    4    2  1
+##       up      0    1 17
 ## 
 ## Overall Statistics
 ##                                           
 ##                Accuracy : 0.8             
-##                  95% CI : (0.5634, 0.9427)
-##     No Information Rate : 0.55            
-##     P-Value [Acc &gt; NIR] : 0.01886         
+##                  95% CI : (0.6143, 0.9229)
+##     No Information Rate : 0.6             
+##     P-Value [Acc &gt; NIR] : 0.01718         
 ##                                           
-##                   Kappa : 0.6552          
+##                   Kappa : 0.6471          
 ##                                           
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: down Class: flat Class: up
-## Sensitivity               0.5714      0.5000    1.0000
-## Specificity               1.0000      0.8333    0.8889
-## Pos Pred Value            1.0000      0.2500    0.9167
-## Neg Pred Value            0.8125      0.9375    1.0000
-## Prevalence                0.3500      0.1000    0.5500
-## Detection Rate            0.2000      0.0500    0.5500
-## Detection Prevalence      0.2000      0.2000    0.6000
-## Balanced Accuracy         0.7857      0.6667    0.9444</code></pre>
+## Sensitivity               0.5556     0.66667    0.9444
+## Specificity               1.0000     0.81481    0.9167
+## Pos Pred Value            1.0000     0.28571    0.9444
+## Neg Pred Value            0.8400     0.95652    0.9167
+## Prevalence                0.3000     0.10000    0.6000
+## Detection Rate            0.1667     0.06667    0.5667
+## Detection Prevalence      0.1667     0.23333    0.6000
+## Balanced Accuracy         0.7778     0.74074    0.9306</code></pre>
 </div>
 </div>
 <div id="policy.rate" class="section level3">
@@ -3729,7 +3726,7 @@ plData &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(pl_ma
 <span class="co"># convert 'policy' to a factor column as well</span>
 plData<span class="op">$</span>policy &lt;-<span class="st"> </span><span class="kw">as.factor</span>(plData<span class="op">$</span>policy)</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pl_n &lt;-<span class="st"> </span><span class="kw">nrow</span>(plData)
-plTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(pl_n <span class="op">*</span><span class="st"> </span><span class="fl">0.80</span>)
+plTrainVolume &lt;-<span class="st"> </span><span class="kw">round</span>(pl_n <span class="op">*</span><span class="st"> </span><span class="fl">0.68</span>)
 <span class="kw">set.seed</span>(<span class="dv">314</span>)
 plTrainIndex &lt;-<span class="st"> </span><span class="kw">sample</span>(pl_n, plTrainVolume)
 plTrain &lt;-<span class="st"> </span>plData[empTrainIndex,]
@@ -3741,45 +3738,45 @@ plTest &lt;-<span class="st"> </span>plData[<span class="op">-</span>empTrainInd
 ## 
 ##           Reference
 ## Prediction flat lower raise
-##      flat    12     0     4
+##      flat    21     0     5
 ##      lower    0     4     0
 ##      raise    0     0     0
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.8             
-##                  95% CI : (0.5634, 0.9427)
-##     No Information Rate : 0.6             
-##     P-Value [Acc &gt; NIR] : 0.05095         
+##                Accuracy : 0.8333          
+##                  95% CI : (0.6528, 0.9436)
+##     No Information Rate : 0.7             
+##     P-Value [Acc &gt; NIR] : 0.07659         
 ##                                           
-##                   Kappa : 0.5833          
+##                   Kappa : 0.5562          
 ##                                           
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: flat Class: lower Class: raise
-## Sensitivity                 1.00          1.0          0.0
-## Specificity                 0.50          1.0          1.0
-## Pos Pred Value              0.75          1.0          NaN
-## Neg Pred Value              1.00          1.0          0.8
-## Prevalence                  0.60          0.2          0.2
-## Detection Rate              0.60          0.2          0.0
-## Detection Prevalence        0.80          0.2          0.0
-## Balanced Accuracy           0.75          1.0          0.5</code></pre>
+## Sensitivity               1.0000       1.0000       0.0000
+## Specificity               0.4444       1.0000       1.0000
+## Pos Pred Value            0.8077       1.0000          NaN
+## Neg Pred Value            1.0000       1.0000       0.8333
+## Prevalence                0.7000       0.1333       0.1667
+## Detection Rate            0.7000       0.1333       0.0000
+## Detection Prevalence      0.8667       0.1333       0.0000
+## Balanced Accuracy         0.7222       1.0000       0.5000</code></pre>
 </div>
 </div>
 <div id="summary-and-conclusion" class="section level3">
 <h3>5.1.6 Summary and Conclusion</h3>
 <p>Table of summary</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span><span class="kw">tibble</span>(<span class="dt">variable =</span> <span class="kw">c</span>(<span class="st">&quot;Medium.Term.Rate&quot;</span>,<span class="st">&quot;Employment.Growth&quot;</span>,<span class="st">&quot;Economic.Growth&quot;</span>,<span class="st">&quot;Inflation&quot;</span>,<span class="st">&quot;Policy.Rate&quot;</span>), <span class="dt">modelling =</span> <span class="kw">c</span>(<span class="st">&quot;80 : 20&quot;</span>, <span class="st">&quot;80 : 20&quot;</span>, <span class="st">&quot;58 : 42&quot;</span>, <span class="st">&quot;70 : 30&quot;</span>, <span class="st">&quot;80 : 20&quot;</span>), <span class="dt">accuracy=</span> <span class="kw">c</span>(<span class="dv">100</span>, <span class="dv">90</span>, <span class="fl">79.1</span>, <span class="fl">64.52</span>, <span class="dv">95</span>)) 
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span><span class="kw">tibble</span>(<span class="dt">variable =</span> <span class="kw">c</span>(<span class="st">&quot;Medium.Term.Rate&quot;</span>,<span class="st">&quot;Employment.Growth&quot;</span>,<span class="st">&quot;Economic.Growth&quot;</span>,<span class="st">&quot;Inflation&quot;</span>,<span class="st">&quot;Policy.Rate&quot;</span>), <span class="dt">modelling =</span> <span class="kw">c</span>(<span class="st">&quot;68 : 32&quot;</span>, <span class="st">&quot;70 : 30&quot;</span>, <span class="st">&quot;70 : 30&quot;</span>, <span class="st">&quot;68 : 32&quot;</span>, <span class="st">&quot;68 : 32&quot;</span>), <span class="dt">accuracy=</span> <span class="kw">c</span>(<span class="fl">93.75</span>, <span class="dv">80</span>, <span class="fl">66.67</span>, <span class="fl">68.75</span>, <span class="fl">83.33</span>)) 
 
- <span class="kw">kable</span>(results,
+  <span class="kw">kable</span>(results,
       <span class="dt">col.names =</span> <span class="kw">linebreak</span>(<span class="kw">c</span>(<span class="st">&quot;Variable&quot;</span>, <span class="st">&quot;Modelling (Train : Test)&quot;</span>, <span class="st">&quot;Accuracy (%)&quot;</span>), <span class="dt">align =</span> <span class="st">&quot;c&quot;</span>)) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">kable_styling</span>(<span class="st">&quot;striped&quot;</span>, <span class="dt">full_width =</span> T) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">kable_styling</span>(<span class="st">&quot;striped&quot;</span>, <span class="dt">bootstrap_options =</span> <span class="kw">c</span>(<span class="st">&quot;hover&quot;</span>, <span class="st">&quot;striped&quot;</span>)) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">column_spec</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>, <span class="dt">bold =</span> T, <span class="dt">color =</span> <span class="st">&quot;#000&quot;</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">row_spec</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>, <span class="dt">bold =</span> T, <span class="dt">color =</span> <span class="st">&quot;#000&quot;</span>)</code></pre></div>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<table class="table table-hover table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -3799,10 +3796,10 @@ Accuracy (%)
 Medium.Term.Rate
 </td>
 <td style="text-align:left;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-80 : 20
+68 : 32
 </td>
 <td style="text-align:right;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-100.00
+93.75
 </td>
 </tr>
 <tr>
@@ -3810,10 +3807,10 @@ Medium.Term.Rate
 Employment.Growth
 </td>
 <td style="text-align:left;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-80 : 20
+70 : 30
 </td>
 <td style="text-align:right;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-90.00
+80.00
 </td>
 </tr>
 <tr>
@@ -3821,10 +3818,10 @@ Employment.Growth
 Economic.Growth
 </td>
 <td style="text-align:left;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-58 : 42
+70 : 30
 </td>
 <td style="text-align:right;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-79.10
+66.67
 </td>
 </tr>
 <tr>
@@ -3832,10 +3829,10 @@ Economic.Growth
 Inflation
 </td>
 <td style="text-align:left;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-70 : 30
+68 : 32
 </td>
 <td style="text-align:right;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-64.52
+68.75
 </td>
 </tr>
 <tr>
@@ -3843,22 +3840,22 @@ Inflation
 Policy.Rate
 </td>
 <td style="text-align:left;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-80 : 20
+68 : 32
 </td>
 <td style="text-align:right;font-weight: bold;color: #000 !important;font-weight: bold;color: #000 !important;">
-95.00
+83.33
 </td>
 </tr>
 </tbody>
 </table>
-<p>For some of the variables, extra fine-tuning of the data was not needed to achieve appreciable accuracy. But for the <code>Economic.Growth</code> variable, we needed to adjust the ratio of training set to test data set to <code>58:42</code> to achieve an accuracy of <code>79.10%</code>. For the <code>Inflation</code> variable we had to adjust sparsity to <code>0.94</code>, removed 13 unuseful columns, adjusted the ratio of training to test data sets to <code>70:30</code> before we could achieve an accuracy of <code>64.52%</code></p>
+<p>For some of the variables, extra fine-tuning of the data was not needed to achieve appreciable accuracy. But for the <code>Economic.Growth</code> variable, we needed to adjust the ratio of training set to test data set to <code>70:30</code> to achieve an accuracy of <code>66.67%</code>. For the <code>Inflation</code> variable we had to adjust sparsity to <code>0.80</code>, removed 13 unuseful columns, adjusted the ratio of training to test data sets to <code>68:32</code> before we could achieve an accuracy of <code>68.75%</code></p>
 <p>We can conclude that these values obtained, though not perfect, did go a long way to align with the human based scoring/classification of the economy trends based on the variables considered within the selected years. There are much room left for improvements and further analysis but we cannot go beyond this level right now as time will not permit us</p>
 </div>
 </div>
 <div id="findings-text-classification" class="section level2">
 <h2>5.2 Findings: Text Classification</h2>
 <p>Text classification of FOMC statements is not generally a research objective but we think it is worthwhile. Classification addresses a potential need: Can a machine correctly infer the opinion or direction of forward guidance or policy decisions in a structured text by the FOMC? In this regard, the classification problem for the FOMC is isomorphic to the Ham-Spam classification of incoming emails by an email program. However, the reader may object that FOMC statements are not so voluminous to require automated processing. Our response is that FOMC statements are merely the first baby step in a much larger classification problem: the public communications of all FOMC and Federal Reserve system members. As previously explained, the FOMC members give speeches, publish articles, appear on TV interviews. Moreover, FOMC meeting minutes are released several weeks after the policy statement is released. These are much longer and required more effort to read and digest. Also, the FOMC transcripts released several years after the meeting may run to over 100 pages each. They contain word for word replay of the entire meeting (excluding private discussions). Lastly, there are at least 16 relevant central banks around the world of interest. Although the Fed is the world’s more important central bank, the ECB, Bank of England, Bank of Japan, Bank of China, Bank of Australia, Bank of New Zealand, all produce communications. In summary, no single person can read all central bank communications. The ability to extract key messages from plain texts remains a valuable capability.</p>
-<p>Our machine learning prediction backtest suggests that automated classification is feasible to detect limited features of a central bank communication. Our algorithm succeeds at detecting medium term rate outlooks, employment growth and policy rate changes. At these tasks, we have attained accuracy rates between 90-100 percent. The most challenging attribute to understand is inflation (64.5%). This is consistent with financial practitioner opinion. Inflation is the most complex of these areas to quantify, control and manage. That is because inflation has 4 distinct aspects: realized inflation (price changes from past surveys), market based real yields of TIPS bonds and inflation swaps, and long term expectations of inflation, inflation measured with or without volatile sectors: food and energy. Because the statements may treat some or all of these aspects we believe accuracy in understanding FOMC inflation views is hard.</p>
+<p>Our machine learning prediction backtest suggests that automated classification is feasible to detect limited features of a central bank communication. Our algorithm succeeds at detecting medium term rate outlooks, employment growth and policy rate changes. At these tasks, we have attained accuracy rates between 80-93.75 percent. The most challenging attribute to understand is inflation (64.5%). This is consistent with financial practitioner opinion. Inflation is the most complex of these areas to quantify, control and manage. That is because inflation has 4 distinct aspects: realized inflation (price changes from past surveys), market based real yields of TIPS bonds and inflation swaps, and long term expectations of inflation, inflation measured with or without volatile sectors: food and energy. Because the statements may treat some or all of these aspects we believe accuracy in understanding FOMC inflation views is hard.</p>
 </div>
 <div id="sentiment-analysis" class="section level2">
 <h2>5.3 Sentiment Analysis</h2>

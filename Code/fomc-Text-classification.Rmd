@@ -27,7 +27,7 @@ library(kableExtra)
 
 ## 5.1 Text Classifications
 
-##### The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than two classes) while only one (`Medium.Term.Rate`) is binary.
+The manual scores of the FOMC statements are leaveraged as a rich source of reference point for validating automated classifcations. We hope that this can serve as a good basis for future researches and there a lot of rooms for improvement. The variables classiffied are not all binary. Some are multi-classed (have more than two classes) while only one (`Medium.Term.Rate`) is binary.
 
 
 ##### Read the data
@@ -67,10 +67,9 @@ customStopWords <- c("the federal open market committee", "committee")
 ```
 
 
-```{r}
-fomc_dataX <- fomc_Rand %>% mutate(statement.content = tolower(statement.content))
+```{r message=FALSE, warning=FALSE}
 
-fomc_dataX$statement.content <- str_replace_all(fomc_dataX$statement.content, customStopWords, "")
+fomc_dataX <- fomc_Rand %>% mutate(statement.content = tolower(statement.content))%>%mutate(statement.content = str_replace_all(statement.content, customStopWords, ""))
 
 ```
 
@@ -104,7 +103,7 @@ corpus <- tm_map(corpus, stripWhitespace)
 dtm <- DocumentTermMatrix(corpus)
 
 # handle sparsity
-corpusX <- removeSparseTerms(dtm, 0.95)
+corpusX <- removeSparseTerms(dtm, 0.30)
 
 # convert to matrix
 data_matrix <- as.matrix(corpusX)
@@ -140,7 +139,7 @@ mRateData$tone <- as.factor(tolower(mRateData$tone))
 ```{r}
 
 mRate_n <- nrow(mRateData)
-mRateTrainVolume <- round(mRate_n * 0.80)
+mRateTrainVolume <- round(mRate_n * 0.68)
 
 set.seed(314)
 
@@ -197,7 +196,7 @@ econData$egrowth <- as.factor(econData$egrowth)
 ```{r}
 
 econ_n <- nrow(econData)
-econTrainVolume <- round(econ_n * 0.58)
+econTrainVolume <- round(econ_n * 0.70)
 
 set.seed(314)
 
@@ -238,7 +237,7 @@ econResult <- predict(econModel, newdata = econTest)
 dtmI <- DocumentTermMatrix(corpus)
 
 # handle sparsity
-corpusI <- removeSparseTerms(dtm, 0.94)
+corpusI <- removeSparseTerms(dtm, 0.80)
 
 # convert to matrix
 data_matrixI <- as.matrix(corpusI)
@@ -274,7 +273,7 @@ infDataX <- inflationData[, -which(names(inflationData) %in% c("although", "will
 ```{r}
 
 inf_n <- nrow(infDataX)
-infTrainVolume <- round(inf_n * 0.70)
+infTrainVolume <- round(inf_n * 0.68)
 
 set.seed(314)
 
@@ -330,7 +329,7 @@ empData$empGrowth <- as.factor(empData$empGrowth)
 ```{r}
 
 emp_n <- nrow(empData)
-empTrainVolume <- round(emp_n * 0.80)
+empTrainVolume <- round(emp_n * 0.70)
 
 set.seed(314)
 
@@ -388,7 +387,7 @@ plData$policy <- as.factor(plData$policy)
 
 pl_n <- nrow(plData)
 
-plTrainVolume <- round(pl_n * 0.80)
+plTrainVolume <- round(pl_n * 0.68)
 
 set.seed(314)
 
@@ -413,6 +412,7 @@ plResult <- predict(plModel, newdata = plTest)
 ```
 
 
+
 ```{r}
 ( plStats = confusionMatrix( plResult, plTest$policy))
 ```
@@ -424,7 +424,7 @@ Table of summary
 
 ```{r}
 
-results <- tibble(variable = c("Medium.Term.Rate","Employment.Growth","Economic.Growth","Inflation","Policy.Rate"), modelling = c("80 : 20", "80 : 20", "58 : 42", "70 : 30", "80 : 20"), accuracy= c(100, 90, 79.1, 64.52, 95)) 
+results <- tibble(variable = c("Medium.Term.Rate","Employment.Growth","Economic.Growth","Inflation","Policy.Rate"), modelling = c("68 : 32", "70 : 30", "70 : 30", "68 : 32", "68 : 32"), accuracy= c(93.75, 80, 66.67, 68.75, 83.33)) 
 
 ```
 
